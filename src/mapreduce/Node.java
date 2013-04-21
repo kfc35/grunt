@@ -13,11 +13,23 @@ public class Node {
 		id = i;
 	}
 	
+	public long getId() {
+		return id;
+	}
+
+	/*public void setId(long id) {
+		this.id = id;
+	}*/
+
 	public long getPageRank() {
 		return pageRank;
 	}
 	public void setPageRank(long pageRank) {
 		this.pageRank = pageRank;
+	}
+	
+	public ArrayList<Edge> getOutEdges() {
+		return outEdges;
 	}
 	
 	public void addInEdge(Edge n) {
@@ -26,5 +38,12 @@ public class Node {
 	
 	public void addOutEdge(Edge n) {
 		outEdges.add(n);
+	}
+	
+	public boolean equals(Object o) {
+		if (o instanceof Node) {
+			return ((Node) o).getId() == this.id;
+		}
+		else return false;
 	}
 }
