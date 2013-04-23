@@ -20,6 +20,7 @@ public class SimpleReducer extends Reducer<LongWritable, LongWritable, LongWrita
 	protected void reduce(LongWritable key, Iterator<LongWritable> values, 
 			OutputCollector<LongWritable, LongWritable> output, 
 			Reporter reporter) throws IOException {
+		
 		long pageRankValue = (long) 0.0;
 		long previous = (long) 0;
 		while (values.hasNext()) {
@@ -34,6 +35,7 @@ public class SimpleReducer extends Reducer<LongWritable, LongWritable, LongWrita
 		}
 		long thisResidual = (pageRankValue - previous)/pageRankValue;
 		reporter.getCounter(SimpleMapReduce.GraphCounters.RESIDUAL).increment(thisResidual);
+		
 		output.collect(key, new LongWritable(pageRankValue));
 	}
 }

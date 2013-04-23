@@ -8,10 +8,10 @@ import javax.mail.MessagingException;
 import javax.mail.internet.AddressException;
 
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.mapreduce.Job;
-import org.apache.hadoop.mapreduce.lib.input.*;
+import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
+import org.apache.hadoop.mapreduce.lib.input.KeyValueTextInputFormat;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import org.apache.hadoop.mapreduce.lib.output.TextOutputFormat;
 
@@ -35,7 +35,7 @@ public class SimpleMapReduce {
 				job.setJobName("PageRank");
 
 				job.setOutputKeyClass(LongWritable.class);
-				job.setOutputValueClass(IntWritable.class);
+				job.setOutputValueClass(LongWritable.class);
 
 				job.setMapperClass(SimpleMapper.class);
 				job.setReducerClass(SimpleReducer.class);
@@ -47,6 +47,8 @@ public class SimpleMapReduce {
 				FileOutputFormat.setOutputPath(job, new Path(args[1]));
 
 				job.setJarByClass(SimpleMapReduce.class);
+				
+				job.getCounters().findCounter(GraphCounters.RESIDUAL).setValue(0);
 				job.waitForCompletion(true);
 				
 				long totalResidual = job.getCounters().findCounter(GraphCounters.RESIDUAL).getValue();
