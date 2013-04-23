@@ -1,6 +1,7 @@
 package mapreduce;
 
 import java.io.IOException;
+import java.util.StringTokenizer;
 
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.Text;
@@ -20,17 +21,18 @@ public class SimpleMapper extends Mapper<LongWritable, Text, LongWritable, LongW
 	protected void map(LongWritable key, Text value, 
 			OutputCollector<LongWritable, LongWritable> output, 
 			Reporter reporter) throws IOException, InterruptedException {
-		// Get the long value of the pagerank	
-		long v = Double.valueOf(value.toString()).longValue();
+		String line = value.toString();
+		StringTokenizer itr = new StringTokenizer(line);
 
-		Node node = SimpleMapReduce.nodes[(int) key.get()];
+		// Get the long value of the pagerank	
+		long v = Double.valueOf(itr.nextToken().toString()).longValue();
 		// COmpute the pagerank to all output edges
-		LongWritable flow = new LongWritable(v / node.getNumOuts());
+		LongWritable flow = new LongWritable(v / Double.valueOf(itr.nextToken().toString()).longValue());
 		// You to yourself for residual comparison
 		output.collect(key, new LongWritable(1 + v));
-
-		for (Long to : node.getOutNodes()) {	
-			LongWritable link = new LongWritable(to);
+		
+		while (itr.hasMoreTokens()) {
+			LongWritable link = new LongWritable(Double.valueOf(itr.nextToken().toString()).longValue());
 			output.collect(link, flow);
 		}
 	}

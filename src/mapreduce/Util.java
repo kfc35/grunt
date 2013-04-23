@@ -1,8 +1,5 @@
 package mapreduce;
 
-import java.io.BufferedReader;
-import java.io.FileReader;
-import java.io.IOException;
 import java.util.Properties;
 
 import javax.mail.Message;
@@ -23,28 +20,6 @@ public class Util {
 		434707, 444489, 454285, 464398, 474196, 484050, 493968, 503752, 514131, 
 		524510, 534709, 545088, 555467, 565846, 576225, 586604, 596585, 606367, 
 		616148, 626448, 636240, 646022, 655804, 665666, 675448, 685230};
-
-	/**
-	 * Get the input and put into the array of nodes
-	 */
-	public static void Init() throws IOException {
-		BufferedReader br = new BufferedReader(new FileReader(SimpleMapReduce.FILE_NAME));
-		String line;
-		while ((line = br.readLine()) != null) {
-			long from = Long.parseLong(line.substring(0, 6));
-			long to = Long.parseLong(line.substring(7, 13));
-
-			if (SimpleMapReduce.nodes[(int) from] == null) {
-				SimpleMapReduce.nodes[(int) from] = new Node(from);
-			} 
-			(SimpleMapReduce.nodes[(int) from]).addOutNode(to);
-			if (SimpleMapReduce.nodes[(int) to] == null) {
-				SimpleMapReduce.nodes[(int) to] = new Node(to);
-			}
-			(SimpleMapReduce.nodes[(int) to]).addInNode(from);
-		}      
-		br.close();
-	}
 
 	/**
 	 * @param nodeID

@@ -17,8 +17,6 @@ import org.apache.hadoop.mapreduce.lib.output.TextOutputFormat;
 
 public class SimpleMapReduce {
 
-	final static String FILE_NAME = "output.txt";
-	public static Node[] nodes;
 	static enum GraphCounters {RESIDUAL}
 
 	/**
@@ -31,9 +29,6 @@ public class SimpleMapReduce {
 		StringBuilder sb = new StringBuilder();
 
 		try {
-			nodes = new Node[685230];
-
-			Util.Init();
 
 			//for (int i = 0 ; i < 5 ; i++) {
 				Job job = new Job();
@@ -53,8 +48,6 @@ public class SimpleMapReduce {
 
 				job.setJarByClass(SimpleMapReduce.class);
 				job.waitForCompletion(true);
-
-				job.submit();
 				
 				long totalResidual = job.getCounters().findCounter(GraphCounters.RESIDUAL).getValue();
 				sb.append(totalResidual / 685230).append("\n");
