@@ -3,17 +3,17 @@ package mapreduce;
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
-import java.util.StringTokenizer;
-
-import java.util.ArrayList;
 
 import javax.mail.MessagingException;
 import javax.mail.internet.AddressException;
 
+import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.LongWritable;
-import org.apache.hadoop.io.Text;
-import org.apache.hadoop.mapreduce.Mapper.Context;
+import org.apache.hadoop.mapreduce.Job;
+import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
+import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
+import org.apache.hadoop.mapreduce.lib.output.TextOutputFormat;
 
 public class SimpleMapReduce {
 
@@ -33,33 +33,26 @@ public class SimpleMapReduce {
 
 			Util.Init();
 
+			Job job = new Job();
+			job.setJobName("PageRank");
+
+			job.setOutputKeyClass(LongWritable.class);
+			job.setOutputValueClass(IntWritable.class);
+
+			job.setMapperClass(SimpleMapper.class);
+			job.setReducerClass(SimpleReducer.class);
+
+			job.setInputFormatClass(KeyValueTextInputFormat.class);
+			job.setOutputFormatClass(TextOutputFormat.class);
+
+			FileInputFormat.setInputPaths(job, new Path(args[0]));
+			FileOutputFormat.setOutputPath(job, new Path(args[1]));
+
+			job.setJarByClass(SimpleMapReduce.class);
+			job.waitForCompletion(true);
+
+			job.submit();
 		} catch (Exception e) {}
 		Util.email();
-	}
-	
-	/*The return value is a list of nodes, where only the ID and the page rank value is specified
-	 *The mapper receives the nodeId as the key, and the node object as the value.
-	 *The node object contains the edges and the probability distribution*/
-	public static ArrayList<Node> mapper(int nodeId, Node node) {
-		ArrayList<Node> flowingPagerank = new ArrayList<Node>();
-		for (Edge edge : node.getOutEdges()) {
-			//Assume only one edge exists to a connected node.
-			Node destination = new Node(edge.getTo());
-			destination.setPageRank(edge.getProb() * node.getPageRank());
-			flowingPagerank.add(destination);
-		}
-		return flowingPagerank;
-	}
-	
-	/*The return value is the pageRank for the given nodeId.
-	 *The reducer receives the nodeId as the key, and a intermediary node object as the value.
-	 *The node object contains only the page rank value flowing into it from some other node.
-	 */
-	public static long reducer(int nodeId, ArrayList<Node> pageRankValues) {
-		long pageRankValue = 0;
-		for (Node pageRankValueNode : pageRankValues) {
-			pageRankValue += pageRankValueNode.getPageRank();
-		}
-		return pageRankValue;
 	}
 }

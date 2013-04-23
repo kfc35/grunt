@@ -6,8 +6,8 @@ public class Node {
 
 	private long id;
 	private long pageRank = ((long) 1) / ((long) 685230);
-	private ArrayList<Edge> inEdges;
-	private ArrayList<Edge> outEdges;
+	private ArrayList<Long> inNodes;
+	private ArrayList<Long> outNodes;
 	
 	public Node(long i) {
 		id = i;
@@ -28,16 +28,20 @@ public class Node {
 		this.pageRank = pageRank;
 	}
 	
-	public ArrayList<Edge> getOutEdges() {
-		return outEdges;
+	public ArrayList<Long> getOutNodes() {
+		return outNodes;
 	}
 	
-	public void addInEdge(Edge n) {
-		inEdges.add(n);
+	public long getNumOuts() {
+		return (long) outNodes.size();
 	}
 	
-	public void addOutEdge(Edge n) {
-		outEdges.add(n);
+	public void addInNode(Long n) {
+		inNodes.add(n);
+	}
+	
+	public void addOutNode(Long n) {
+		outNodes.add(n);
 	}
 	
 	public boolean equals(Object o) {
