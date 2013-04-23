@@ -73,7 +73,7 @@ public class Util {
 	 * @throws AddressException if the email address parse failed
 	 * @throws MessagingException if the connection is dead or not in the connected state or if the message is not a MimeMessage
 	 */
-	public static void email() 
+	public static void email(String m) 
 			throws AddressException, MessagingException {
 		String host = "smtp.gmail.com";
 		String from = "cs5300proj2alerts";
@@ -98,13 +98,12 @@ public class Util {
 		for( int i=0; i < to.length; i++ ) { // changed from a while loop
 			toAddress[i] = new InternetAddress(to[i]);
 		}
-		System.out.println(Message.RecipientType.TO);
 
 		for( int i=0; i < toAddress.length; i++) { // changed from a while loop
 			message.addRecipient(Message.RecipientType.TO, toAddress[i]);
 		}
 		message.setSubject("CS5300 Alert");
-		message.setText("");
+		message.setText(m, "utf-8");
 		Transport transport = session.getTransport("smtp");
 		transport.connect(host, from, pass);
 		transport.sendMessage(message, message.getAllRecipients());

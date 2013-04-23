@@ -26,6 +26,8 @@ public class SimpleMapper extends Mapper<LongWritable, Text, LongWritable, LongW
 		Node node = SimpleMapReduce.nodes[(int) key.get()];
 		// COmpute the pagerank to all output edges
 		LongWritable flow = new LongWritable(v / node.getNumOuts());
+		// You to yourself for residual comparison
+		output.collect(key, new LongWritable(1 + v));
 
 		for (Long to : node.getOutNodes()) {	
 			LongWritable link = new LongWritable(to);

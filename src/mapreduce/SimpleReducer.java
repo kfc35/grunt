@@ -21,9 +21,19 @@ public class SimpleReducer extends Reducer<LongWritable, LongWritable, LongWrita
 			OutputCollector<LongWritable, LongWritable> output, 
 			Reporter reporter) throws IOException {
 		long pageRankValue = (long) 0.0;
+		long previous = (long) 0;
 		while (values.hasNext()) {
-			pageRankValue += values.next().get();
+			long rank = values.next().get();
+
+			// If it was to itself for residual computations
+			if (rank > 1) {
+				previous = rank;
+			} else {
+				pageRankValue += rank;
+			}
 		}
+		long thisResidual = (pageRankValue - previous)/pageRankValue;
+		reporter.getCounter(SimpleMapReduce.GraphCounters.RESIDUAL).increment(thisResidual);
 		output.collect(key, new LongWritable(pageRankValue));
 	}
 }
