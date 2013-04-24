@@ -4,11 +4,10 @@ import java.io.IOException;
 import java.util.Iterator;
 
 import org.apache.hadoop.io.LongWritable;
-import org.apache.hadoop.mapred.OutputCollector;
-import org.apache.hadoop.mapred.Reporter;
+import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Reducer;
 
-public class SimpleReducer extends Reducer<LongWritable, LongWritable, LongWritable, LongWritable> {
+public class SimpleReducer extends Reducer<LongWritable, Text, Text, Text> {
 
 	public SimpleReducer() {}
 	/**
@@ -16,26 +15,36 @@ public class SimpleReducer extends Reducer<LongWritable, LongWritable, LongWrita
 	 * The reducer receives the nodeId as the key, and a intermediary node object as the value.
 	 * The node object contains only the page rank value flowing into it from some other node.
 	 * @throws IOException 
+	 * @throws InterruptedException 
 	 */
-	protected void reduce(LongWritable key, Iterator<LongWritable> values, 
-			OutputCollector<LongWritable, LongWritable> output, 
-			Reporter reporter) throws IOException {
+	protected void reduce(LongWritable key, Iterator<Text> values, 
+			Context context) throws IOException, InterruptedException {
 		
-		long pageRankValue = (long) 0.0;
-		long previous = (long) 0;
+		float pageRankValue = (float)0;
+		float previous = (float) 0;
+		String rest = "";
 		while (values.hasNext()) {
-			long rank = values.next().get();
+			String v = values.next().toString();
+			String[] args = v.split(" ", 2);
+			Float rank = Float.valueOf(args[0]);;
 
 			// If it was to itself for residual computations
 			if (rank > 1) {
-				previous = rank;
+				previous = rank - 1;
+				rest = args[1];
 			} else {
 				pageRankValue += rank;
 			}
 		}
-		long thisResidual = (pageRankValue - previous)/pageRankValue;
-		reporter.getCounter(SimpleMapReduce.GraphCounters.RESIDUAL).increment(thisResidual);
+		//float thisResidual = (pageRankValue - previous)/pageRankValue;
+		//long longResidual = (long) (thisResidual * 10E12);
+		context.getCounter(SimpleMapReduce.GraphCounters.RESIDUAL).increment(1);
+		/*
+		context.getCounter(SimpleMapReduce.GraphCounters.MIN_RESIDUAL).setValue(
+				Math.min(context.getCounter(SimpleMapReduce.GraphCounters.MIN_RESIDUAL).getValue(), longResidual));
+				*/
+		Text out = new Text("" + pageRankValue + " " + rest);
 		
-		output.collect(key, new LongWritable(pageRankValue));
+		context.write(new Text(key.toString()), out);
 	}
 }

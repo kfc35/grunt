@@ -7,8 +7,9 @@ import java.io.StringWriter;
 import javax.mail.MessagingException;
 import javax.mail.internet.AddressException;
 
+import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.io.LongWritable;
+import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
 import org.apache.hadoop.mapreduce.lib.input.KeyValueTextInputFormat;
@@ -17,7 +18,7 @@ import org.apache.hadoop.mapreduce.lib.output.TextOutputFormat;
 
 public class SimpleMapReduce {
 
-	static enum GraphCounters {RESIDUAL}
+	static enum GraphCounters {RESIDUAL, MIN_RESIDUAL}
 
 	/**
 	 * @param args
@@ -31,11 +32,12 @@ public class SimpleMapReduce {
 		try {
 
 			//for (int i = 0 ; i < 5 ; i++) {
-				Job job = new Job();
-				job.setJobName("PageRank");
+				Configuration conf = new Configuration();
+				Job job = new Job(conf, "PageRank");
+				job.setJarByClass(SimpleMapReduce.class);
 
-				job.setOutputKeyClass(LongWritable.class);
-				job.setOutputValueClass(LongWritable.class);
+				job.setOutputKeyClass(Text.class);
+				job.setOutputValueClass(Text.class);
 
 				job.setMapperClass(SimpleMapper.class);
 				job.setReducerClass(SimpleReducer.class);
@@ -46,14 +48,14 @@ public class SimpleMapReduce {
 				FileInputFormat.setInputPaths(job, new Path(args[0]));
 				FileOutputFormat.setOutputPath(job, new Path(args[1]));
 
-				job.setJarByClass(SimpleMapReduce.class);
-				
-				job.getCounters().findCounter(GraphCounters.RESIDUAL).setValue(0);
 				job.waitForCompletion(true);
 				
 				long totalResidual = job.getCounters().findCounter(GraphCounters.RESIDUAL).getValue();
-				sb.append(totalResidual / 685230).append("\n");
-				job.getCounters().findCounter(GraphCounters.RESIDUAL).setValue(0);
+				sb.append("The number of reduce keys are: ").append("\n");
+				sb.append(totalResidual).append("\n");
+				//double tR = ((float)totalResidual) / 10E12;
+				//sb.append(tR/ 685230).append("\n");
+				//job.getCounters().findCounter(GraphCounters.RESIDUAL).setValue(0);
 			//}
 		} catch (Exception e) {
 			StringWriter writer = new StringWriter();

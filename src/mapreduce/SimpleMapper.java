@@ -5,11 +5,9 @@ import java.util.StringTokenizer;
 
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.Text;
-import org.apache.hadoop.mapred.OutputCollector;
-import org.apache.hadoop.mapred.Reporter;
 import org.apache.hadoop.mapreduce.Mapper;
 
-public class SimpleMapper extends Mapper<Text, Text, LongWritable, LongWritable> {
+public class SimpleMapper extends Mapper<Text, Text, LongWritable, Text> {
 
 	public SimpleMapper() {}
 
@@ -19,23 +17,24 @@ public class SimpleMapper extends Mapper<Text, Text, LongWritable, LongWritable>
 	 * The node object contains the edges and the probability distribution
 	 */
 	protected void map(Text key, Text value, 
-			OutputCollector<LongWritable, LongWritable> output, 
-			Reporter reporter) throws IOException, InterruptedException {
+			Context context) throws IOException, InterruptedException {
 		
-		LongWritable origin = new LongWritable(Double.valueOf(key.toString()).longValue());
 		String line = value.toString();
 		StringTokenizer itr = new StringTokenizer(line);
 
 		// Get the long value of the pagerank	
-		long v = Double.valueOf(itr.nextToken().toString()).longValue();
-		// COmpute the pagerank to all output edges
-		LongWritable flow = new LongWritable(v / Double.valueOf(itr.nextToken().toString()).longValue());
+		Float v = Float.valueOf(itr.nextToken().toString());
+		float prev = 1 + v;
+		
+		// Compute the pagerank to all output edges
+		Float flow = new Float(v / Float.valueOf(itr.nextToken().toString()));
+		Text flowText = new Text(flow.toString());
 		// You to yourself for residual comparison
-		output.collect(origin, new LongWritable(1 + v));
+		context.write(new LongWritable(Long.valueOf(key.toString())), 
+				new Text("" + prev + " " + line.split(" ", 2)[1]));
 		
 		while (itr.hasMoreTokens()) {
-			LongWritable link = new LongWritable(Double.valueOf(itr.nextToken().toString()).longValue());
-			output.collect(link, flow);
+			context.write(new LongWritable(Long.valueOf(itr.nextToken().toString())), flowText);
 		}
 	}
 }
