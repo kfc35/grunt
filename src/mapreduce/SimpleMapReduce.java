@@ -30,7 +30,6 @@ public class SimpleMapReduce {
 		StringBuilder sb = new StringBuilder();
 
 		try {
-			String front = args[1].substring(0, args[1].length() - 2);
 			
 			/* Notice that only submit output directories ending in i
 			 * So 10, 20, 150, 300, etc */
@@ -50,20 +49,24 @@ public class SimpleMapReduce {
 				job.setInputFormatClass(KeyValueTextInputFormat.class);
 				job.setOutputFormatClass(TextOutputFormat.class);
 				
+
 				// The input file will be the original and then from the last output
 				if (i == 0) {
 					FileInputFormat.setInputPaths(job, new Path(args[0]));
 				} else {
-					FileInputFormat.setInputPaths(job, new Path(front + last));
+					FileInputFormat.setInputPaths(job, new Path(args[1] + last));
 				}
 				
 				// Always output the file according to the iteration index
-				FileOutputFormat.setOutputPath(job, new Path(front + i));
+				FileOutputFormat.setOutputPath(job, new Path(args[1] + i));
+
 				
-				/* This is for the single instance running
+				//This is for the single instance running
+				/*
 				FileInputFormat.setInputPaths(job, new Path(args[0]));
 				FileOutputFormat.setOutputPath(job, new Path(args[1]));
 				*/
+				
 				job.waitForCompletion(true); // Submit the job, only return when true
 				
 				// Get the residual

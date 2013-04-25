@@ -17,32 +17,38 @@ public class SimpleMapper extends Mapper<Text, Text, Text, Text> {
 	 */
 	protected void map(Text key, Text value, 
 			Context context) throws IOException, InterruptedException {
+		// You to yourself for residual comparison
+		context.write(key, value);
 
-		String line = value.toString();
-		StringTokenizer itr = new StringTokenizer(line);
-		
-		Text k = new Text(Long.valueOf(key.toString()).toString());
+		/*
+		 * Value should be in the form:
+		 * pagerank
+		 * numOuts
+		 * list of outs
+		 */
+		StringTokenizer itr = new StringTokenizer(value.toString());
 
 		// Get the long value of the pagerank	
-		Float v = Float.valueOf(itr.nextToken().toString());
-		float prev = 1 + v;
-
-		// You to yourself for residual comparison
-		context.write(k, 
-				new Text("" + prev + " " + line.split(" ", 2)[1]));		
+		Float pageRank = Float.valueOf(itr.nextToken());
 
 		// Get the number of outgoing edges
-		Float numOuts = Float.valueOf(itr.nextToken().toString());
+		Float numOuts = Float.valueOf(itr.nextToken());
 
-		// There's only you... so sad, so sad
-		if (numOuts == 0) {
-			context.write(k, new Text(v.toString()));
+		/* There's only you... so sad, so sad
+		 * pagerank
+		 * 0
+		 */
+		if (numOuts == (float) 0) {
+			context.write(key, new Text(pageRank.toString()));
 		} else {
-			// Compute the pagerank to all output edges
-			Text flowText = new Text(Float.valueOf(v / numOuts).toString());
+			// If your pagerank is 0, then you're useless
+			if (pageRank != 0) {
+				// Compute the pagerank to all output edges
+				Text outRankText = new Text(Float.valueOf(pageRank / numOuts).toString());
 
-			while (itr.hasMoreTokens()) {
-				context.write(new Text(Long.valueOf(itr.nextToken().toString()).toString()), flowText);
+				while (itr.hasMoreTokens()) {
+					context.write(new Text(itr.nextToken()), outRankText);
+				}
 			}
 		}
 	}

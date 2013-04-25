@@ -10,7 +10,6 @@ import javax.mail.internet.AddressException;
 import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeMessage;
 
-
 public class Util {
 	public static long[] blocks = {10328, 20373, 30629, 40645, 50462, 60841, 
 		70591, 80118, 90497, 100501, 110567, 120945, 130999, 140574, 150953, 

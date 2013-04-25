@@ -19,27 +19,35 @@ public class SimpleReducer extends Reducer<Text, Text, Text, Text> {
 			org.apache.hadoop.mapreduce.Reducer<Text, Text, Text, Text>.Context context)
 					throws IOException, InterruptedException {
 		
-		float pageRankValue = (float)0;
-		float previous = (float) 0;
+		float pageRankValue = 0;
+		float previous = 0;
 		String rest = "";
 		
 		// Iterate through all the values
 		for (Text t : values) {
 			String v = t.toString();
+			/*
+			 * pagerank
+			 * num [list of outgoing nodes] (if exists)
+			 */
 			String[] args = v.split(" ", 2);
+			
 			Float rank = Float.valueOf(args[0]);;
 
 			// If it was to itself for residual computations
-			if (rank > 1) {
-				previous = rank - 1;
+			if (args.length > 1 && Float.valueOf(args[1]) == 0) {
+				previous = rank;
 				rest = args[1];
 			} else {
 				pageRankValue += rank;
 			}
 		}
 		
-		// Calculate the residual
-		float thisResidual = Math.abs((pageRankValue - previous))/pageRankValue;
+		// Calculate the residual, if zero new residual, then change is 100%
+		float thisResidual = 100;
+		if (pageRankValue != 0) {
+			thisResidual = Math.abs((previous - pageRankValue))/pageRankValue;
+		}
 		
 		// Increment by this long residual
 		context.getCounter(SimpleMapReduce.GraphCounters.RESIDUAL).increment((long) thisResidual);
@@ -47,6 +55,6 @@ public class SimpleReducer extends Reducer<Text, Text, Text, Text> {
 		
 		// Write out for next iteration
 		Text out = new Text("" + pageRankValue + " " + rest);
-		context.write(new Text(key.toString()), out);
+		context.write(key, out);
 	}
 }
