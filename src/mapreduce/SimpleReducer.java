@@ -7,6 +7,9 @@ import org.apache.hadoop.mapreduce.Reducer;
 
 public class SimpleReducer extends Reducer<Text, Text, Text, Text> {
 
+	public static final float damping = (float) 0.85;
+	public static final float dis = (((float) 1) -damping) * ((float) 1) / ((float) 685230);
+	
 	public SimpleReducer() {}
 	/**
 	 * The return value is the pageRank for the given nodeId.
@@ -35,13 +38,15 @@ public class SimpleReducer extends Reducer<Text, Text, Text, Text> {
 			Float rank = Float.valueOf(args[0]);;
 
 			// If it was to itself for residual computations
-			if (args.length > 1 && Float.valueOf(args[1]) == 0) {
+			if (args.length > 1) {
 				previous = rank;
 				rest = args[1];
 			} else {
 				pageRankValue += rank;
 			}
 		}
+		
+		pageRankValue = dis + damping * pageRankValue;
 		
 		// Calculate the residual, if zero new residual, then change is 100%
 		float thisResidual = 100;
