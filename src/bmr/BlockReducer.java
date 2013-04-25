@@ -19,12 +19,26 @@ public class BlockReducer extends Reducer<Text, Text, Text, Text> {
 	protected void reduce(Text key, java.lang.Iterable<Text> values, 
 			org.apache.hadoop.mapreduce.Reducer<Text, Text, Text, Text>.Context context)
 					throws IOException, InterruptedException {
-		//Array of max block size to map nodes to
 		
-		float pageRankValue = 0;
+		Long blockID = Long.valueOf(key.toString());
+		Long beginningNodeID = new Long(blockID == 0 ? 0 : Util.blocks[blockID.intValue() - 1] + 1);
+		Long endingNodeID = new Long(Util.blocks[blockID.intValue()]);
+		int size = endingNodeID.intValue() - beginningNodeID.intValue() + 1;
+		
+		//Array of max block size to map nodes to
+		float[] PR = new float[size];
+		float[] NPR = new float[size];
+		
+		//TODO have to indicate in the values whether the value is
+		//part of the block OR a boundary condition
+		String[] otherInfo = new String[size];
+
+		//TODO: Keep a data structure of Boundary Conditions
+		
 		float previous = 0;
 		String rest = "";
-		//long nodeID;
+		
+		/**Need first iteration to set everything up from the reducer**/
 		
 		// Iterate through all the values
 		for (Text t : values) {
@@ -38,6 +52,7 @@ public class BlockReducer extends Reducer<Text, Text, Text, Text> {
 			
 			String[] args = v.split(" ", 3);
 			
+			Long nodeID = 
 			Float rank = Float.valueOf(args[1]);
 
 			// If it was to itself for residual computations
@@ -65,6 +80,12 @@ public class BlockReducer extends Reducer<Text, Text, Text, Text> {
 		// Write out for next iteration
 		Text out = new Text("" + pageRankValue + " " + rest);
 		context.write(key, out);
+		**/
+	}
+	
+	private void IterateBlockOnce(float[] PR, float[] NPR, String[] otherInfo) {
+		
+		
 	}
 
 }
