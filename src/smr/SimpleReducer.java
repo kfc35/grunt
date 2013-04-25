@@ -1,14 +1,13 @@
-package mapreduce;
+package smr;
 
 import java.io.IOException;
 
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Reducer;
 
-public class SimpleReducer extends Reducer<Text, Text, Text, Text> {
+import util.Util;
 
-	public static final float damping = (float) 0.85;
-	public static final float dis = (((float) 1) -damping) * ((float) 1) / ((float) 685230);
+public class SimpleReducer extends Reducer<Text, Text, Text, Text> {
 	
 	public SimpleReducer() {}
 	/**
@@ -35,7 +34,7 @@ public class SimpleReducer extends Reducer<Text, Text, Text, Text> {
 			 */
 			String[] args = v.split(" ", 2);
 			
-			Float rank = Float.valueOf(args[0]);;
+			Float rank = Float.valueOf(args[0]);
 
 			// If it was to itself for residual computations
 			if (args.length > 1) {
@@ -46,13 +45,13 @@ public class SimpleReducer extends Reducer<Text, Text, Text, Text> {
 			}
 		}
 		
-		pageRankValue = dis + damping * pageRankValue;
+		pageRankValue = Util.dis + Util.damping * pageRankValue;
 		
 		// Calculate the residual, if zero new residual, then change is 100%
-		float thisResidual = 100;
-		if (pageRankValue != 0) {
-			thisResidual = Math.abs((previous - pageRankValue))/pageRankValue;
-		}
+		//float thisResidual = 100;
+		//if (pageRankValue != 0) {
+		float thisResidual = Math.abs((previous - pageRankValue))/pageRankValue;
+		//}
 		
 		// Increment by this long residual
 		context.getCounter(SimpleMapReduce.GraphCounters.RESIDUAL).increment((long) thisResidual);

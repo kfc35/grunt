@@ -1,4 +1,4 @@
-package mapreduce;
+package bmr;
 
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -6,6 +6,7 @@ import java.io.StringWriter;
 
 import javax.mail.MessagingException;
 import javax.mail.internet.AddressException;
+
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
@@ -16,8 +17,13 @@ import org.apache.hadoop.mapreduce.lib.input.KeyValueTextInputFormat;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import org.apache.hadoop.mapreduce.lib.output.TextOutputFormat;
 
-public class SimpleMapReduce {
+import smr.SimpleMapReduce;
+import smr.SimpleMapper;
+import smr.SimpleReducer;
+import util.Util;
 
+public class BlockMapReduce {
+	
 	static enum GraphCounters {RESIDUAL, NODES}
 
 	/**
@@ -38,13 +44,13 @@ public class SimpleMapReduce {
 
 				Configuration conf = new Configuration();
 				Job job = new Job(conf, "PageRank");
-				job.setJarByClass(SimpleMapReduce.class);
+				job.setJarByClass(BlockMapReduce.class);
 
 				job.setOutputKeyClass(Text.class);
 				job.setOutputValueClass(Text.class);
 
-				job.setMapperClass(SimpleMapper.class);
-				job.setReducerClass(SimpleReducer.class);
+				job.setMapperClass(BlockMapper.class);
+				job.setReducerClass(BlockReducer.class);
 
 				job.setInputFormatClass(KeyValueTextInputFormat.class);
 				job.setOutputFormatClass(TextOutputFormat.class);
@@ -70,11 +76,11 @@ public class SimpleMapReduce {
 				job.waitForCompletion(true); // Submit the job, only return when true
 				
 				// Get the residual
-				long totalResidual = job.getCounters().findCounter(SimpleMapReduce.GraphCounters.RESIDUAL).getValue();
+				long totalResidual = job.getCounters().findCounter(BlockMapReduce.GraphCounters.RESIDUAL).getValue();
 				
 				// To add to the email
 				sb.append("Iteration ").append(i).append(" presents -> ");
-				sb.append(job.getCounters().findCounter(SimpleMapReduce.GraphCounters.NODES).getValue());
+				sb.append(job.getCounters().findCounter(BlockMapReduce.GraphCounters.NODES).getValue());
 				sb.append(" reduce tasks for a total residual and avg residual of | ");
 				sb.append(totalResidual).append(" : ");
 				sb.append(((float) totalResidual)/ ((float) 685230)).append("\n");
@@ -91,4 +97,5 @@ public class SimpleMapReduce {
 
 		Util.email(sb.toString());
 	}
+
 }

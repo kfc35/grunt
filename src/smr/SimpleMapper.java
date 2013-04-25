@@ -1,4 +1,4 @@
-package mapreduce;
+package smr;
 
 import java.io.IOException;
 import java.util.StringTokenizer;
@@ -42,7 +42,7 @@ public class SimpleMapper extends Mapper<Text, Text, Text, Text> {
 			context.write(key, new Text(pageRank.toString()));
 		} else {
 			// If your pagerank is 0, then you're useless
-			if (pageRank != 0) {
+			//if (pageRank != 0) {
 				
 				// Compute the pagerank to all output edges
 				Text outRankText = new Text(Float.valueOf(pageRank / numOuts).toString());
@@ -50,7 +50,7 @@ public class SimpleMapper extends Mapper<Text, Text, Text, Text> {
 				while (itr.hasMoreTokens()) {
 					context.write(new Text(itr.nextToken()), outRankText);
 				}
-			}
+			//}
 		}
 	}
 }
