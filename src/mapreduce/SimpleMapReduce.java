@@ -18,7 +18,7 @@ import org.apache.hadoop.mapreduce.lib.output.TextOutputFormat;
 
 public class SimpleMapReduce {
 
-	static enum GraphCounters {RESIDUAL}
+	static enum GraphCounters {RESIDUAL, NODES}
 
 	/**
 	 * @param args
@@ -30,11 +30,12 @@ public class SimpleMapReduce {
 		StringBuilder sb = new StringBuilder();
 
 		try {
-
-			/*String front = args[1].substring(0, args[1].length() - 2);
+			String front = args[1].substring(0, args[1].length() - 2);
+			
+			/* Notice that only submit output directories ending in i
+			 * So 10, 20, 150, 300, etc */
 			for (int i = 0 ; i < 5 ; i++) {
 				int last = i - 1; 
-				*/
 
 				Configuration conf = new Configuration();
 				Job job = new Job(conf, "PageRank");
@@ -48,25 +49,35 @@ public class SimpleMapReduce {
 
 				job.setInputFormatClass(KeyValueTextInputFormat.class);
 				job.setOutputFormatClass(TextOutputFormat.class);
-/*
+				
 				// The input file will be the original and then from the last output
 				if (i == 0) {
 					FileInputFormat.setInputPaths(job, new Path(args[0]));
 				} else {
 					FileInputFormat.setInputPaths(job, new Path(front + last));
 				}
+				
 				// Always output the file according to the iteration index
 				FileOutputFormat.setOutputPath(job, new Path(front + i));
-*/
+				
+				/* This is for the single instance running
 				FileInputFormat.setInputPaths(job, new Path(args[0]));
 				FileOutputFormat.setOutputPath(job, new Path(args[1]));
+				*/
+				job.waitForCompletion(true); // Submit the job, only return when true
 				
-				job.waitForCompletion(true);
+				// Get the residual
 				long totalResidual = job.getCounters().findCounter(SimpleMapReduce.GraphCounters.RESIDUAL).getValue();
+				
+				// To add to the email
+				sb.append("Iteration ").append(i).append(" presents -> ");
+				sb.append(job.getCounters().findCounter(SimpleMapReduce.GraphCounters.NODES).getValue());
+				sb.append(" reduce tasks for a total residual and avg residual of | ");
 				sb.append(totalResidual).append(" : ");
 				sb.append(((float) totalResidual)/ ((float) 685230)).append("\n");
-			//}
+			}
 		} catch (Exception e) {
+			// Print the stack trace
 			StringWriter writer = new StringWriter();
 			PrintWriter printWriter = new PrintWriter( writer );
 			e.printStackTrace( printWriter );

@@ -37,12 +37,13 @@ public class SimpleReducer extends Reducer<Text, Text, Text, Text> {
 				pageRankValue += rank;
 			}
 		}
+		
+		// Calculate the residual
 		float thisResidual = Math.abs((pageRankValue - previous))/pageRankValue;
-		System.out.println(thisResidual);
-		long longResidual = (long) (thisResidual);
 		
 		// Increment by this long residual
-		context.getCounter(SimpleMapReduce.GraphCounters.RESIDUAL).increment(longResidual);
+		context.getCounter(SimpleMapReduce.GraphCounters.RESIDUAL).increment((long) thisResidual);
+		context.getCounter(SimpleMapReduce.GraphCounters.NODES).increment(1);
 		
 		// Write out for next iteration
 		Text out = new Text("" + pageRankValue + " " + rest);
