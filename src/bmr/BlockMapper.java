@@ -22,7 +22,15 @@ public class BlockMapper extends Mapper<Text, Text, Text, Text> {
 			Context context) throws IOException, InterruptedException {
 		
 		// You to yourself for residual comparison
-		context.write(Util.blockIDofNode(Long.valueOf(key.toString())), new Text(key.toString() + " " + value.toString()));
+		/*
+		 * Value would be
+		 * origin nodeID
+		 * pagerank
+		 * numOuts
+		 * list of outs (if exists)
+		 */
+		context.write(Util.blockIDofNode(Long.valueOf(key.toString())), 
+				new Text(key.toString() + " " + value.toString()));
 
 		/*
 		 * Value should be in the form:
@@ -38,20 +46,37 @@ public class BlockMapper extends Mapper<Text, Text, Text, Text> {
 		// Get the number of outgoing edges
 		Float numOuts = Float.valueOf(itr.nextToken());
 
-		/* There's only you... so sad, so sad
-		 * pagerank
-		 * 0
-		 */
-		if (numOuts == (float) 0) {
-			context.write(Util.blockIDofNode(Long.valueOf(key.toString())), new Text(key.toString() + " " + pageRank.toString()));
-		} else {	
+		
+//		 /* There's only you... so sad, so sad
+//		 * pagerank
+//		 * 0
+//		 */
+//		if (numOuts == (float) 0) {
+//			
+//			 /* Value in the form of 
+//			 * origin = destination nodeID
+//			 * pageRank left for oneself
+//			 */
+//			context.write(Util.blockIDofNode(Long.valueOf(key.toString())), 
+//					new Text(key.toString() + " " + pageRank.toString()));
+//		} else {	
 			// Compute the pagerank to all output edges
 			Text outRankText = new Text(Float.valueOf(pageRank / numOuts).toString());
 
 			while (itr.hasMoreTokens()) {
 				String nextKey = itr.nextToken().toString();
-				context.write(Util.blockIDofNode(Long.valueOf(nextKey)), new Text(nextKey + " " + outRankText.toString()));
+				Text toBlockID = Util.blockIDofNode(Long.valueOf(nextKey));
+				
+				if (!toBlockID.toString().equals(Util.blockIDString(Long.valueOf(key.toString())))) {
+				
+				 /* Value in the form of 
+				 * destination nodeID
+				 * pageRank for that node
+				 */
+				context.write(toBlockID, 
+						new Text(nextKey + " " + outRankText.toString()));
+				}
 			}
-		}
+//		}
 	}
 }

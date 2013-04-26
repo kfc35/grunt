@@ -30,6 +30,14 @@ public class Util {
 	 * @return
 	 */
 	public static Text blockIDofNode(long nodeID) {
+		return new Text(blockIDString(nodeID));
+	}
+	
+	/**
+	 * @param nodeID
+	 * @return
+	 */
+	public static String blockIDString(long nodeID) {
 		int lower = (int) (nodeID / 10328); // Get the most likely block
 		if (nodeID <= 10328) { // After this point, the block number needs to decrease lower than our expectation
 			lower = 0;
@@ -37,7 +45,7 @@ public class Util {
 		while (blocks[lower] < nodeID) {
 			lower++;
 		}
-		return new Text(Long.valueOf(lower).toString());
+		return Long.valueOf(lower).toString();
 	}
 
 	/**

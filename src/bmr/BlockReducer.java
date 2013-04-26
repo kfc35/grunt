@@ -1,6 +1,7 @@
 package bmr;
 
 import java.io.IOException;
+import java.util.StringTokenizer;
 
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Reducer;
@@ -26,17 +27,19 @@ public class BlockReducer extends Reducer<Text, Text, Text, Text> {
 		int size = endingNodeID.intValue() - beginningNodeID.intValue() + 1;
 		
 		//Array of max block size to map nodes to
+		float[] beginningPR = new float[size];
 		float[] PR = new float[size];
 		float[] NPR = new float[size];
 		
-		//TODO have to indicate in the values whether the value is
-		//part of the block OR a boundary condition
-		String[] otherInfo = new String[size];
+		// Array of the original mapper values for this node except the pagerank
+		/*
+		 * NumOuts
+		 * List of Outs
+		 */
+		String[] originalValues = new String[size];
 
-		//TODO: Keep a data structure of Boundary Conditions
-		
-		float previous = 0;
-		String rest = "";
+		// Array of the total incoming pagerank from outside node
+		float[] boundaryPR = new float[size];
 		
 		/**Need first iteration to set everything up from the reducer**/
 		
@@ -51,41 +54,101 @@ public class BlockReducer extends Reducer<Text, Text, Text, Text> {
 			 */
 			
 			String[] args = v.split(" ", 3);
-			
-			Long nodeID = 
+			Float nodeID = Float.valueOf(args[0]);
 			Float rank = Float.valueOf(args[1]);
-
-			// If it was to itself for residual computations
-			if (args.length > 2) {
-				previous = rank;
-				rest = args[1];
-			} else {
-				pageRankValue += rank;
-			}
 			
+			if (args.length == 2) {
+				// Then it's a boundary PR
+				boundaryPR[nodeID.intValue()] += rank;
+			} else {
+				beginningPR[nodeID.intValue()] = rank;
+				NPR[nodeID.intValue()] = rank;
+				originalValues[nodeID.intValue()] = args[2];
+			}
 		}
+		float residual = 0;
 		
-		pageRankValue = Util.dis + Util.damping * pageRankValue;
+		/*
+		 * Calculate the pageranks until convergence or until the residual is under a threshold
+		 */
+		do {
+			PR = NPR;
+			NPR = new float[size];
+			IterateBlockOnce(PR, NPR, boundaryPR, originalValues, beginningNodeID, endingNodeID);
+			CalculateDampingAndResidual(beginningPR, NPR);
+		} while (residual > 0.001);
 		
-		// Calculate the residual, if zero new residual, then change is 100%
-		//float thisResidual = 100;
-		//if (pageRankValue != 0) {
-		float thisResidual = Math.abs((previous - pageRankValue))/pageRankValue;
-		//}
-		
-		// Increment by this long residual
-		context.getCounter(BlockMapReduce.GraphCounters.RESIDUAL).increment((long) thisResidual);
-		context.getCounter(BlockMapReduce.GraphCounters.NODES).increment(1);
-		
-		// Write out for next iteration
-		Text out = new Text("" + pageRankValue + " " + rest);
-		context.write(key, out);
-		**/
+		WriteKeyValue(context, beginningNodeID, NPR, originalValues);
 	}
 	
-	private void IterateBlockOnce(float[] PR, float[] NPR, String[] otherInfo) {
-		
-		
+	private void IterateBlockOnce(float[] PR, float[] NPR, float[] boundaryPR, String[] originalValues, long beginningNodeID, long endingNodeID) {
+		// Iterate through all the nodes in the block
+		for (int i = 0 ; i < NPR.length ; i++) {
+			
+			// Always add the boundary flow into this block
+			NPR[i] += boundaryPR[i];
+			
+			StringTokenizer st = new StringTokenizer(originalValues[i]);
+			long numOuts = Long.valueOf(st.nextToken());
+			
+			// If the number of outgoing edges is zero, then all the pagerank stays in itself
+			if (numOuts == 0) {
+				NPR[i] += PR[i];
+			} else {
+				// Calculate the flow on each edge
+				float outFlow = PR[i] / (float) numOuts;
+				
+				while (st.hasMoreTokens()) {
+					
+					// For each outgoing edge
+					Long outNodeID = Long.valueOf(Util.blockIDString(Long.valueOf(st.nextToken())));
+					
+					// If the outgoing edge is in the block, add the value in the block
+					if (outNodeID >= beginningNodeID && outNodeID <= endingNodeID) {
+						int offset = outNodeID.intValue() - (int) beginningNodeID;
+						NPR[offset] += outFlow;
+					}
+				}
+			}
+		}
 	}
 
+	/**
+	 * 
+	 * @param beginningPR
+	 * @param NPR
+	 * @return
+	 * 
+	 * Dampen each number and calculate the residuals
+	 */
+	private float CalculateDampingAndResidual(float[] beginningPR, float[] NPR) {
+		
+		float residual = 0;
+		for (int i = 0 ; i < NPR.length ; i++) {
+			NPR[i] = Util.dis + Util.damping * NPR[i];
+			residual += Math.abs(beginningPR[i] - NPR[i]) / NPR[i];
+		}
+		return residual / (float) NPR.length;
+	}
+	
+	/**
+	 * 
+	 * @param context
+	 * @param beginningNodeID
+	 * @param NPR
+	 * @param originalValues
+	 * @throws IOException
+	 * @throws InterruptedException
+	 * 
+	 * Write out each key and value pair
+	 */
+	private void WriteKeyValue(org.apache.hadoop.mapreduce.Reducer<Text, Text, Text, Text>.Context context, 
+			long beginningNodeID, float[] NPR, String[] originalValues) 
+					throws IOException, InterruptedException {
+		for (int i = 0 ; i < NPR.length ; i++) {
+			
+			long nodeID = i + beginningNodeID;
+			context.write(new Text("" + nodeID), new Text("" + NPR[i] + " " + originalValues[i]));
+		}
+	}
 }

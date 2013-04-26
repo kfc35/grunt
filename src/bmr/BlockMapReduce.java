@@ -7,7 +7,6 @@ import java.io.StringWriter;
 import javax.mail.MessagingException;
 import javax.mail.internet.AddressException;
 
-
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.Text;
@@ -17,9 +16,6 @@ import org.apache.hadoop.mapreduce.lib.input.KeyValueTextInputFormat;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import org.apache.hadoop.mapreduce.lib.output.TextOutputFormat;
 
-import smr.SimpleMapReduce;
-import smr.SimpleMapper;
-import smr.SimpleReducer;
 import util.Util;
 
 public class BlockMapReduce {
@@ -39,7 +35,7 @@ public class BlockMapReduce {
 			
 			/* Notice that only submit output directories ending in i
 			 * So 10, 20, 150, 300, etc */
-			for (int i = 0 ; i < 5 ; i++) {
+			for (int i = 0 ; i < 10 ; i++) {
 				int last = i - 1; 
 
 				Configuration conf = new Configuration();
