@@ -1,6 +1,7 @@
 package bmr;
 
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.StringTokenizer;
 
 import org.apache.hadoop.io.Text;
@@ -37,12 +38,14 @@ public class BlockReducer extends Reducer<Text, Text, Text, Text> {
 		 * List of Outs
 		 */
 		String[] originalValues = new String[size];
+		Arrays.fill(originalValues, 0, size, "");
 
 		// Array of the total incoming pagerank from outside node
 		double[] boundaryPR = new double[size];
 
 		// Array of incoming edges
 		String[] originNodes = new String[size];
+		Arrays.fill(originNodes, 0, size, "");
 
 		/**Need first iteration to set everything up from the reducer**/
 
@@ -62,7 +65,7 @@ public class BlockReducer extends Reducer<Text, Text, Text, Text> {
 				originalValues[offset] = type[3];
 			} else if (type.equals("0")) {
 				// If this value is from another node in the block
-				originNodes[offset] += type[3] + " ";
+				originNodes[offset] += type[2] + " ";
 			} else {
 				// Then it's a boundary PR
 				boundaryPR[offset] += rank;
