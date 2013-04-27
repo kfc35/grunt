@@ -27,9 +27,9 @@ public class BlockReducer extends Reducer<Text, Text, Text, Text> {
 		int size = endingNodeID.intValue() - beginningNodeID.intValue() + 1;
 
 		//Array of max block size to map nodes to
-		float[] beginningPR = new float[size];
-		float[] PR = new float[size];
-		float[] NPR = new float[size];
+		double[] beginningPR = new double[size];
+		double[] PR = new double[size];
+		double[] NPR = new double[size];
 
 		// Array of the original mapper values for this node except the pagerank
 		/*
@@ -39,7 +39,7 @@ public class BlockReducer extends Reducer<Text, Text, Text, Text> {
 		String[] originalValues = new String[size];
 
 		// Array of the total incoming pagerank from outside node
-		float[] boundaryPR = new float[size];
+		double[] boundaryPR = new double[size];
 
 		// Array of incoming edges
 		String[] originNodes = new String[size];
@@ -53,7 +53,7 @@ public class BlockReducer extends Reducer<Text, Text, Text, Text> {
 			String[] type = v.split(" ", 4);				
 			Long nodeID = Long.valueOf(type[1]);
 			int offset = nodeID.intValue() - beginningNodeID.intValue();
-			Float rank = Float.valueOf(type[2]);
+			Double rank = Double.valueOf(type[2]);
 
 			// If this value is just the type setting value
 			if (type[0].equals("-1")) {
@@ -68,16 +68,15 @@ public class BlockReducer extends Reducer<Text, Text, Text, Text> {
 				boundaryPR[offset] += rank;
 			}
 		}
-		float residual = 0;
+		double residual = 0;
 
 		/*
 		 * Calculate the pageranks until convergence or until the residual is under a threshold
 		 */
 		do {
 			PR = NPR;
-			NPR = new float[size];
-			IterateBlockOnce(PR, NPR, boundaryPR, originalValues, originNodes, beginningNodeID);
-			CalculateDampingAndResidual(beginningPR, NPR);
+			NPR = new double[size];
+			residual = IterateBlockOnce(beginningPR, PR, NPR, boundaryPR, originalValues, originNodes, beginningNodeID);
 			
 			// TODO: find a better metric to stop by
 		} while (residual > 0.001);
@@ -85,9 +84,10 @@ public class BlockReducer extends Reducer<Text, Text, Text, Text> {
 		WriteKeyValue(context, beginningNodeID, NPR, originalValues);
 	}
 
-	private void IterateBlockOnce(float[] PR, float[] NPR, float[] boundaryPR, 
-			String[] originalValues, String[] originNodes, 
+	private double IterateBlockOnce(double[] beginningPR, double[] PR, double[] NPR, 
+			double[] boundaryPR,	String[] originalValues, String[] originNodes, 
 			Long beginningNodeID) {
+		double residual = 0;
 		
 		// Iterate through all the nodes in the block
 		for (int i = 0 ; i < NPR.length ; i++) {
@@ -103,7 +103,7 @@ public class BlockReducer extends Reducer<Text, Text, Text, Text> {
 				int offset = edgeFromID.intValue() - beginningNodeID.intValue();
 				
 				// Get the previous pagerank of that source
-				Float edgeFromPageRank = PR[offset];
+				double edgeFromPageRank = PR[offset];
 				
 				// Get the numOuts of that source
 				long numOuts = Long.valueOf(originalValues[offset].split(" ")[0]);
@@ -113,27 +113,15 @@ public class BlockReducer extends Reducer<Text, Text, Text, Text> {
 					numOuts = 1;
 				}
 				// Add the flow to me
-				NPR[offset] += edgeFromPageRank / ((float) numOuts);
+				NPR[offset] += edgeFromPageRank / ((double) numOuts);
 			}
-		}
-	}
-
-	/**
-	 * 
-	 * @param beginningPR
-	 * @param NPR
-	 * @return
-	 * 
-	 * Dampen each number and calculate the residuals
-	 */
-	private float CalculateDampingAndResidual(float[] beginningPR, float[] NPR) {
-
-		float residual = 0;
-		for (int i = 0 ; i < NPR.length ; i++) {
+			
+			// Damping
 			NPR[i] = Util.dis + Util.damping * NPR[i];
 			residual += Math.abs(beginningPR[i] - NPR[i]) / NPR[i];
 		}
-		return residual / (float) NPR.length;
+		
+		return residual / (double) NPR.length;
 	}
 
 	/**
@@ -148,7 +136,7 @@ public class BlockReducer extends Reducer<Text, Text, Text, Text> {
 	 * Write out each key and value pair
 	 */
 	private void WriteKeyValue(org.apache.hadoop.mapreduce.Reducer<Text, Text, Text, Text>.Context context, 
-			long beginningNodeID, float[] NPR, String[] originalValues) 
+			long beginningNodeID, double[] NPR, String[] originalValues) 
 					throws IOException, InterruptedException {
 		for (int i = 0 ; i < NPR.length ; i++) {
 

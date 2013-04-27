@@ -22,8 +22,9 @@ public class Util {
 		524510, 534709, 545088, 555467, 565846, 576225, 586604, 596585, 606367, 
 		616148, 626448, 636240, 646022, 655804, 665666, 675448, 685230};
 	
-	public static final float damping = (float) 0.85;
-	public static final float dis = (((float) 1) -damping) / ((float) 685230);
+	public static final double size = 100.0;
+	public static final double damping = 0.85;
+	public static final double dis = (1.0 - damping) / size;
 
 	/**
 	 * @param nodeID
@@ -45,7 +46,7 @@ public class Util {
 		while (blocks[lower] < nodeID) {
 			lower++;
 		}
-		return Long.valueOf(lower).toString();
+		return Double.valueOf(lower).toString();
 	}
 
 	/**

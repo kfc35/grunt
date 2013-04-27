@@ -21,8 +21,8 @@ public class SimpleReducer extends Reducer<Text, Text, Text, Text> {
 			org.apache.hadoop.mapreduce.Reducer<Text, Text, Text, Text>.Context context)
 					throws IOException, InterruptedException {
 		
-		float pageRankValue = 0;
-		float previous = 0;
+		double pageRankValue = 0;
+		double previous = 0;
 		String rest = "";
 		
 		// Iterate through all the values
@@ -34,7 +34,7 @@ public class SimpleReducer extends Reducer<Text, Text, Text, Text> {
 			 */
 			String[] args = v.split(" ", 2);
 			
-			Float rank = Float.valueOf(args[0]);
+			double rank = Double.parseDouble(args[0]);
 
 			// If it was to itself for residual computations
 			if (args.length > 1) {
@@ -48,13 +48,13 @@ public class SimpleReducer extends Reducer<Text, Text, Text, Text> {
 		pageRankValue = Util.dis + Util.damping * pageRankValue;
 		
 		// Calculate the residual, if zero new residual, then change is 100%
-		//float thisResidual = 100;
+		//double thisResidual = 100;
 		//if (pageRankValue != 0) {
-		float thisResidual = Math.abs((previous - pageRankValue))/pageRankValue;
+		double thisResidual = Math.abs((previous - pageRankValue))/pageRankValue;
 		//}
 		
 		// Increment by this long residual
-		context.getCounter(SimpleMapReduce.GraphCounters.RESIDUAL).increment((long) thisResidual);
+		context.getCounter(SimpleMapReduce.GraphCounters.RESIDUAL).increment((long) (thisResidual * 10E7));
 		context.getCounter(SimpleMapReduce.GraphCounters.NODES).increment(1);
 		
 		// Write out for next iteration

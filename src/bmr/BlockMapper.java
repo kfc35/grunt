@@ -43,17 +43,17 @@ public class BlockMapper extends Mapper<Text, Text, Text, Text> {
 		StringTokenizer itr = new StringTokenizer(value.toString());
 
 		// Get the long value of the pagerank	
-		Float pageRank = Float.valueOf(itr.nextToken());
+		Double pageRank = Double.valueOf(itr.nextToken());
 
 		// Get the number of outgoing edges
-		Float numOuts = Float.valueOf(itr.nextToken());
+		Double numOuts = Double.valueOf(itr.nextToken());
 
 
 		/* There's only you... so sad, so sad
 		 * pagerank
 		 * 0
 		 */
-		if (numOuts == (float) 0) {
+		if (numOuts == (double) 0) {
 
 			/* Value in the form of 
 			 * origin = destination nodeID
@@ -63,7 +63,7 @@ public class BlockMapper extends Mapper<Text, Text, Text, Text> {
 					new Text("0 " + key.toString() + " " + key.toString()));
 		} else {	
 			// Compute the pagerank to all output edges
-			Text outRankText = new Text(Float.valueOf(pageRank / numOuts).toString());
+			Text outRankText = new Text(Double.valueOf(pageRank / numOuts).toString());
 
 			while (itr.hasMoreTokens()) {
 				String nextKey = itr.nextToken().toString();

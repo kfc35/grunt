@@ -7,7 +7,6 @@ import java.io.StringWriter;
 import javax.mail.MessagingException;
 import javax.mail.internet.AddressException;
 
-
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.Text;
@@ -31,7 +30,7 @@ public class SimpleMapReduce {
 	 */
 	public static void main(String[] args) throws IOException, AddressException, MessagingException{
 		StringBuilder sb = new StringBuilder();
-
+		
 		try {
 			
 			/* Notice that only submit output directories ending in i
@@ -71,14 +70,14 @@ public class SimpleMapReduce {
 				job.waitForCompletion(true); // Submit the job, only return when true
 				
 				// Get the residual
-				long totalResidual = job.getCounters().findCounter(SimpleMapReduce.GraphCounters.RESIDUAL).getValue();
+				double totalResidual = ((double) job.getCounters().findCounter(SimpleMapReduce.GraphCounters.RESIDUAL).getValue()) / 10E7;
 				
 				// To add to the email
 				sb.append("Iteration ").append(i).append(" presents -> ");
 				sb.append(job.getCounters().findCounter(SimpleMapReduce.GraphCounters.NODES).getValue());
 				sb.append(" reduce tasks for a total residual and avg residual of | ");
 				sb.append(totalResidual).append(" : ");
-				sb.append(((float) totalResidual)/ ((float) 685230)).append("\n");
+				sb.append(totalResidual/ Util.size).append("\n");
 			}
 		} catch (Exception e) {
 			// Print the stack trace
@@ -91,5 +90,6 @@ public class SimpleMapReduce {
 		}
 
 		Util.email(sb.toString());
+
 	}
 }

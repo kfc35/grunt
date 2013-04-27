@@ -29,23 +29,23 @@ public class SimpleMapper extends Mapper<Text, Text, Text, Text> {
 		StringTokenizer itr = new StringTokenizer(value.toString());
 
 		// Get the long value of the pagerank	
-		Float pageRank = Float.valueOf(itr.nextToken());
+		Double pageRank = Double.valueOf(itr.nextToken());
 
 		// Get the number of outgoing edges
-		Float numOuts = Float.valueOf(itr.nextToken());
+		double numOuts = Double.parseDouble(itr.nextToken());
 
 		/* There's only you... so sad, so sad
 		 * pagerank
 		 * 0
 		 */
-		if (numOuts == (float) 0) {
+		if (numOuts == 0.0) {
 			context.write(key, new Text(pageRank.toString()));
 		} else {
 			// If your pagerank is 0, then you're useless
 			//if (pageRank != 0) {
 				
 				// Compute the pagerank to all output edges
-				Text outRankText = new Text(Float.valueOf(pageRank / numOuts).toString());
+				Text outRankText = new Text(Double.valueOf(pageRank / numOuts).toString());
 
 				while (itr.hasMoreTokens()) {
 					context.write(new Text(itr.nextToken()), outRankText);

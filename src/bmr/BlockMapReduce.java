@@ -79,7 +79,7 @@ public class BlockMapReduce {
 				sb.append(job.getCounters().findCounter(BlockMapReduce.GraphCounters.NODES).getValue());
 				sb.append(" reduce tasks for a total residual and avg residual of | ");
 				sb.append(totalResidual).append(" : ");
-				sb.append(((float) totalResidual)/ ((float) 685230)).append("\n");
+				sb.append(((double) totalResidual)/ ((double) 685230)).append("\n");
 			}
 		} catch (Exception e) {
 			// Print the stack trace
