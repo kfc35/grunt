@@ -73,6 +73,7 @@ public class BlockReducer extends Reducer<Text, Text, Text, Text> {
 		}
 		double residual = 0;
 
+		int iteration = 0;
 		/*
 		 * Calculate the pageranks until convergence or until the residual is under a threshold
 		 */
@@ -80,9 +81,8 @@ public class BlockReducer extends Reducer<Text, Text, Text, Text> {
 			PR = NPR;
 			NPR = new double[size];
 			residual = IterateBlockOnce(beginningPR, PR, NPR, boundaryPR, originalValues, originNodes, beginningNodeID);
-			
-			// TODO: find a better metric to stop by
-		} while (residual > 0.001);
+			residual += 1;
+		} while (iteration <= 10 || residual < 0.001);
 
 		WriteKeyValue(context, beginningNodeID, NPR, originalValues);
 	}
