@@ -7,6 +7,7 @@ import java.util.StringTokenizer;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Reducer;
 
+import smr.SimpleMapReduce;
 import util.Util;
 
 public class BlockReducer extends Reducer<Text, Text, Text, Text> {
@@ -53,20 +54,28 @@ public class BlockReducer extends Reducer<Text, Text, Text, Text> {
 		for (Text t : values) {
 			String v = t.toString();
 
-			String[] type = v.split(" ", 4);				
-			Long nodeID = Long.valueOf(type[1]);
+			StringTokenizer st = new StringTokenizer(v);
+			// 0 is the types
+			int type = Integer.parseInt(st.nextToken());
+			// 1 is the toNodeID
+			Long nodeID = Long.valueOf(st.nextToken());
 			int offset = nodeID.intValue() - beginningNodeID.intValue();
-			Double rank = Double.valueOf(type[2]);
+			Double rank;
 
 			// If this value is just the type setting value
-			if (type[0].equals("-1")) {
+			if (type == -1) {
+				// 2 is the Pagerank
+				rank = Double.valueOf(st.nextToken());
 				beginningPR[offset] = rank;
 				NPR[offset] = rank;
-				originalValues[offset] = type[3];
-			} else if (type.equals("0")) {
+
+				// 3 is the original value to the mapper
+				originalValues[offset] = v.split(" ", 4)[3];
+			} else if (type == 0) {
 				// If this value is from another node in the block
-				originNodes[offset] += type[2] + " ";
+				originNodes[offset] += st.nextToken() + " ";
 			} else {
+				rank = Double.valueOf(st.nextToken());
 				// Then it's a boundary PR
 				boundaryPR[offset] += rank;
 			}
@@ -77,12 +86,15 @@ public class BlockReducer extends Reducer<Text, Text, Text, Text> {
 		/*
 		 * Calculate the pageranks until convergence or until the residual is under a threshold
 		 */
-		do {
-			PR = NPR;
-			NPR = new double[size];
-			residual = IterateBlockOnce(beginningPR, PR, NPR, boundaryPR, originalValues, originNodes, beginningNodeID);
-			residual += 1;
-		} while (iteration <= 10 || residual < 0.001);
+		//do {
+		PR = NPR;
+		NPR = new double[size];
+		residual = IterateBlockOnce(beginningPR, PR, NPR, boundaryPR, originalValues, originNodes, beginningNodeID);
+
+		//} while (iteration <= 10 || residual < 0.001);
+
+		context.getCounter(BlockMapReduce.GraphCounters.RESIDUAL).increment((long) (residual * 10E7));
+		context.getCounter(BlockMapReduce.GraphCounters.NODES).increment(1);
 
 		WriteKeyValue(context, beginningNodeID, NPR, originalValues);
 	}
@@ -91,7 +103,7 @@ public class BlockReducer extends Reducer<Text, Text, Text, Text> {
 			double[] boundaryPR,	String[] originalValues, String[] originNodes, 
 			Long beginningNodeID) {
 		double residual = 0;
-		
+
 		// Iterate through all the nodes in the block
 		for (int i = 0 ; i < NPR.length ; i++) {
 
@@ -104,13 +116,13 @@ public class BlockReducer extends Reducer<Text, Text, Text, Text> {
 				// Get the source of the edge
 				Long edgeFromID = Long.valueOf(itr.nextToken());
 				int offset = edgeFromID.intValue() - beginningNodeID.intValue();
-				
+
 				// Get the previous pagerank of that source
 				double edgeFromPageRank = PR[offset];
-				
+
 				// Get the numOuts of that source
 				long numOuts = Long.valueOf(originalValues[offset].split(" ")[0]);
-				
+
 				// If this origin doesn't go out, then it all goes to me/itself
 				if (numOuts == 0) {
 					numOuts = 1;
@@ -118,12 +130,12 @@ public class BlockReducer extends Reducer<Text, Text, Text, Text> {
 				// Add the flow to me
 				NPR[offset] += edgeFromPageRank / ((double) numOuts);
 			}
-			
+
 			// Damping
 			NPR[i] = Util.dis + Util.damping * NPR[i];
 			residual += Math.abs(beginningPR[i] - NPR[i]) / NPR[i];
 		}
-		
+
 		return residual / (double) NPR.length;
 	}
 

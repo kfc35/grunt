@@ -23,7 +23,7 @@ public class BlockMapper extends Mapper<Text, Text, Text, Text> {
 		/*
 		 * The first value of the value is the identification
 		 * -1 means writing input information to itself
-		 * -1 nodeID (input value)
+		 * -1 nodeID (input value = pagerank numOuts list)
 		 * 0 means an edge from within the block
 		 * 0 toNodeID fromNodeID
 		 * 1 means pagerank from outside the block

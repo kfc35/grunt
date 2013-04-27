@@ -46,7 +46,7 @@ public class Util {
 		while (blocks[lower] < nodeID) {
 			lower++;
 		}
-		return Double.valueOf(lower).toString();
+		return "" + lower;
 	}
 
 	/**

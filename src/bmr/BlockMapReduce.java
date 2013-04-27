@@ -16,6 +16,7 @@ import org.apache.hadoop.mapreduce.lib.input.KeyValueTextInputFormat;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import org.apache.hadoop.mapreduce.lib.output.TextOutputFormat;
 
+import smr.SimpleMapReduce;
 import util.Util;
 
 public class BlockMapReduce {
@@ -35,8 +36,8 @@ public class BlockMapReduce {
 			
 			/* Notice that only submit output directories ending in i
 			 * So 10, 20, 150, 300, etc */
-			for (int i = 0 ; i < 10 ; i++) {
-				int last = i - 1; 
+//			for (int i = 0 ; i < 10 ; i++) {
+//				int last = i - 1; 
 
 				Configuration conf = new Configuration();
 				Job job = new Job(conf, "PageRank");
@@ -53,6 +54,7 @@ public class BlockMapReduce {
 				
 
 				// The input file will be the original and then from the last output
+				/*
 				if (i == 0) {
 					FileInputFormat.setInputPaths(job, new Path(args[0]));
 				} else {
@@ -61,26 +63,25 @@ public class BlockMapReduce {
 				
 				// Always output the file according to the iteration index
 				FileOutputFormat.setOutputPath(job, new Path(args[1] + i));
-
+*/
 				
 				//This is for the single instance running
-				/*
 				FileInputFormat.setInputPaths(job, new Path(args[0]));
 				FileOutputFormat.setOutputPath(job, new Path(args[1]));
-				*/
+
 				
 				job.waitForCompletion(true); // Submit the job, only return when true
 				
 				// Get the residual
-				long totalResidual = job.getCounters().findCounter(BlockMapReduce.GraphCounters.RESIDUAL).getValue();
+				double totalResidual = ((double) job.getCounters().findCounter(BlockMapReduce.GraphCounters.RESIDUAL).getValue()) / 10E7;
 				
 				// To add to the email
-				sb.append("Iteration ").append(i).append(" presents -> ");
+//				sb.append("Iteration ").append(i).append(" presents -> ");
 				sb.append(job.getCounters().findCounter(BlockMapReduce.GraphCounters.NODES).getValue());
 				sb.append(" reduce tasks for a total residual and avg residual of | ");
 				sb.append(totalResidual).append(" : ");
 				sb.append(((double) totalResidual)/ ((double) 685230)).append("\n");
-			}
+//			}
 		} catch (Exception e) {
 			// Print the stack trace
 			StringWriter writer = new StringWriter();
