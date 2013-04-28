@@ -48,8 +48,43 @@ public class BlockReducer extends Reducer<Text, Text, Text, Text> {
 		Arrays.fill(originNodes, 0, size, "");
 
 		/**Need first iteration to set everything up from the reducer**/
+		SetUp(key, values, beginningPR, NPR, originalValues, boundaryPR, 
+				originNodes, beginningNodeID, context);
+		
+		double residual = 0;
 
-		// Iterate through all the values
+		int iteration = 0;
+		/*
+		 * Calculate the pageranks until convergence or until the residual is under a threshold
+		 */
+		do {
+			iteration += 1;
+			PR = NPR;
+			NPR = new double[size];
+			residual = IterateBlockOnce(beginningPR, PR, NPR, boundaryPR, 
+					originalValues, originNodes, beginningNodeID, context);
+
+			// TODO: Change when wanted more than 1 iteration
+		} while (iteration <= 0 && (residual / (double) NPR.length) > 0.001);
+
+		// Add the total block residual
+		context.getCounter(BlockMapReduce.GraphCounters.RESIDUAL).increment((long) (residual * 10E7));
+		context.getCounter(BlockMapReduce.GraphCounters.BLOCKS).increment(1);
+
+		WriteKeyValue(context, beginningNodeID, NPR, originalValues);
+	}
+	
+	/**
+	 * 
+	 * Iterates through the incoming values and parses them correctly
+	 */
+	private void SetUp(Text key, java.lang.Iterable<Text> values, double[] beginningPR, 
+			double[] NPR, String[] originalValues, double[] boundaryPR, 
+			String[] originNodes, Long beginningNodeID, 
+			org.apache.hadoop.mapreduce.Reducer<Text, Text, Text, Text>.Context context) {
+		
+		Integer block = Long.valueOf(key.toString()).intValue();
+		
 		for (Text t : values) {
 			String v = t.toString();
 
@@ -58,6 +93,16 @@ public class BlockReducer extends Reducer<Text, Text, Text, Text> {
 			int type = Integer.parseInt(st.nextToken());
 			// 1 is the toNodeID
 			Long nodeID = Long.valueOf(st.nextToken());
+			
+			// If it's the wrong block, add to the list and exit
+			/*
+			if ((block == 0 && nodeID > Util.blocks[0]) 
+					|| (block != 0 && (nodeID > Util.blocks[block] || nodeID <= Util.blocks[block] - 1))) {
+				context.getCounter(BlockMapReduce.GraphCounters.WRONG_BLOCK).increment(1);
+				continue;
+			}
+			*/
+			
 			int offset = nodeID.intValue() - beginningNodeID.intValue();
 			Double rank;
 
@@ -79,30 +124,11 @@ public class BlockReducer extends Reducer<Text, Text, Text, Text> {
 				boundaryPR[offset] += rank;
 			}
 		}
-		double residual = 0;
-
-		int iteration = 0;
-		/*
-		 * Calculate the pageranks until convergence or until the residual is under a threshold
-		 */
-		do {
-			iteration += 1;
-			PR = NPR;
-			NPR = new double[size];
-			residual = IterateBlockOnce(beginningPR, PR, NPR, boundaryPR, originalValues, originNodes, beginningNodeID);
-
-		} while (iteration <= 10 || residual / (double) NPR.length < 0.001);
-
-		// Add the total block residual
-		context.getCounter(BlockMapReduce.GraphCounters.RESIDUAL).increment((long) (residual * 10E7));
-		context.getCounter(BlockMapReduce.GraphCounters.NODES).increment(1);
-
-		WriteKeyValue(context, beginningNodeID, NPR, originalValues);
 	}
 
 	private double IterateBlockOnce(double[] beginningPR, double[] PR, double[] NPR, 
-			double[] boundaryPR,	String[] originalValues, String[] originNodes, 
-			Long beginningNodeID) {
+			double[] boundaryPR, String[] originalValues, String[] originNodes, 
+			Long beginningNodeID, org.apache.hadoop.mapreduce.Reducer<Text, Text, Text, Text>.Context context) {
 		double residual = 0;
 
 		// Iterate through all the nodes in the block
@@ -122,7 +148,7 @@ public class BlockReducer extends Reducer<Text, Text, Text, Text> {
 				double edgeFromPageRank = PR[offset];
 
 				// Get the numOuts of that source
-				long numOuts = Long.valueOf(originalValues[offset].split(" ")[0]);
+				long numOuts = Long.valueOf(originalValues[offset].replaceAll("  ", " ").split(" ")[0]);
 
 				// If this origin doesn't go out, then it all goes to me/itself
 				if (numOuts == 0) {
@@ -135,6 +161,7 @@ public class BlockReducer extends Reducer<Text, Text, Text, Text> {
 			// Damping
 			NPR[i] = Util.dis + Util.damping * NPR[i];
 			residual += Math.abs(beginningPR[i] - NPR[i]) / NPR[i];
+			context.getCounter(BlockMapReduce.GraphCounters.TOTAL_PAGERANK).increment((long) (NPR[i] * 10E7));
 		}
 
 		return residual;

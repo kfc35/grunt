@@ -41,7 +41,7 @@ public class Util {
 	public static String blockIDString(long nodeID) {
 		int lower = (int) (nodeID / 10328); // Get the most likely block
 		if (nodeID <= 10328) { // After this point, the block number needs to decrease lower than our expectation
-			lower = 0;
+			return "0";
 		}
 		while (blocks[lower] < nodeID) {
 			lower++;

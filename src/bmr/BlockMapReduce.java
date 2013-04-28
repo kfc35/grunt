@@ -20,7 +20,7 @@ import util.Util;
 
 public class BlockMapReduce {
 	
-	static enum GraphCounters {RESIDUAL, NODES}
+	static enum GraphCounters {RESIDUAL, BLOCKS, WRONG_BLOCK, TOTAL_PAGERANK}
 
 	/**
 	 * @param args
@@ -75,11 +75,14 @@ public class BlockMapReduce {
 				double totalResidual = ((double) job.getCounters().findCounter(BlockMapReduce.GraphCounters.RESIDUAL).getValue()) / 10E7;
 				
 				// To add to the email
-//				sb.append("Iteration ").append(i).append(" presents -> ");
-				sb.append(job.getCounters().findCounter(BlockMapReduce.GraphCounters.NODES).getValue());
-				sb.append(" reduce tasks for a total residual and avg residual of | ");
-				sb.append(totalResidual).append(" : ");
-				sb.append(totalResidual/ 685230.0).append("\n");
+//				sb.append("Iteration ").append(i).append(" -> ");
+				sb.append(job.getCounters().findCounter(BlockMapReduce.GraphCounters.BLOCKS).getValue());
+				sb.append(" reduce tasks & ");
+				sb.append(job.getCounters().findCounter(BlockMapReduce.GraphCounters.WRONG_BLOCK).getValue());
+				sb.append(" wrong block for total residual : avg | ");
+				sb.append(totalResidual).append(" : ").append(totalResidual/ Util.size);
+				sb.append(" and total PR of ");
+				sb.append(((double) job.getCounters().findCounter(BlockMapReduce.GraphCounters.TOTAL_PAGERANK).getValue()) / 10E7).append("\n");
 //			}
 		} catch (Exception e) {
 			// Print the stack trace

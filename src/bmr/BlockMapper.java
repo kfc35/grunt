@@ -20,6 +20,8 @@ public class BlockMapper extends Mapper<Text, Text, Text, Text> {
 	 */
 	protected void map(Text key, Text value, 
 			Context context) throws IOException, InterruptedException {
+		Text selfBlockID = Util.blockIDofNode(Long.valueOf(key.toString()));
+		
 		/*
 		 * The first value of the value is the identification
 		 * -1 means writing input information to itself
@@ -31,8 +33,9 @@ public class BlockMapper extends Mapper<Text, Text, Text, Text> {
 		 */
 
 		// You to yourself for residual comparison
-		context.write(Util.blockIDofNode(Long.valueOf(key.toString())), 
-				new Text("-1 " + key.toString() + " " + value.toString()));
+		String s = "-1 " + key.toString() + " " + value.toString();
+		context.write(selfBlockID, 
+				new Text(s.replaceAll("  ", " ")));
 
 		/*
 		 * Value should be in the form:
@@ -53,13 +56,13 @@ public class BlockMapper extends Mapper<Text, Text, Text, Text> {
 		 * pagerank
 		 * 0
 		 */
-		if (numOuts == (double) 0) {
+		if (numOuts == 0.0) {
 
 			/* Value in the form of 
 			 * origin = destination nodeID
 			 * pageRank left for oneself
 			 */
-			context.write(Util.blockIDofNode(Long.valueOf(key.toString())), 
+			context.write(selfBlockID, 
 					new Text("0 " + key.toString() + " " + key.toString()));
 		} else {	
 			// Compute the pagerank to all output edges
@@ -70,7 +73,7 @@ public class BlockMapper extends Mapper<Text, Text, Text, Text> {
 				Text toBlockID = Util.blockIDofNode(Long.valueOf(nextKey));
 
 				// Write the pagerank to the other block node
-				if (!toBlockID.toString().equals(Util.blockIDString(Long.valueOf(key.toString())))) {
+				if (Integer.parseInt(toBlockID.toString()) != Integer.parseInt((selfBlockID.toString()))) {
 
 					context.write(toBlockID, 
 							new Text("1 " + nextKey + " " + outRankText.toString()));
