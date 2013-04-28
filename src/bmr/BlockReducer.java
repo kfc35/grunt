@@ -21,60 +21,57 @@ public class BlockReducer extends Reducer<Text, Text, Text, Text> {
 	protected void reduce(Text key, java.lang.Iterable<Text> values, 
 			org.apache.hadoop.mapreduce.Reducer<Text, Text, Text, Text>.Context context)
 					throws IOException, InterruptedException {
-		for (Text value: values) {
-			context.write(key, value);
-		}
 
-//		Long blockID = Long.valueOf(key.toString());
-//		Long beginningNodeID = new Long(blockID == 0 ? 0 : Util.blocks[blockID.intValue() - 1] + 1);
-//		Long endingNodeID = new Long(Util.blocks[blockID.intValue()]);
-//		int size = endingNodeID.intValue() - beginningNodeID.intValue() + 1;
-//
-//		//Array of max block size to map nodes to
-//		double[] beginningPR = new double[size];
-//		double[] PR = new double[size];
-//		double[] NPR = new double[size];
-//
-//		// Array of the original mapper values for this node except the pagerank
-//		/*
-//		 * NumOuts
-//		 * List of Outs
-//		 */
-//		String[] originalValues = new String[size];
-//		Arrays.fill(originalValues, 0, size, "");
-//
-//		// Array of the total incoming pagerank from outside node
-//		double[] boundaryPR = new double[size];
-//
-//		// Array of incoming edges
-//		String[] originNodes = new String[size];
-//		Arrays.fill(originNodes, 0, size, "");
-//
-//		/**Need first iteration to set everything up from the reducer**/
-//		SetUp(key, values, beginningPR, NPR, originalValues, boundaryPR, 
-//				originNodes, beginningNodeID, context);
-//		
-//		double residual = 0;
-//
-//		int iteration = 0;
-//		/*
-//		 * Calculate the pageranks until convergence or until the residual is under a threshold
-//		 */
-//		do {
-//			iteration += 1;
-//			PR = NPR;
-//			NPR = new double[size];
-//			residual = IterateBlockOnce(beginningPR, PR, NPR, boundaryPR, 
-//					originalValues, originNodes, beginningNodeID, context);
-//
-//			// TODO: Change when wanted more than 1 iteration
-//		} while (iteration <= 0 && (residual / (double) NPR.length) > 0.001);
-//
-//		// Add the total block residual
-//		context.getCounter(BlockMapReduce.GraphCounters.RESIDUAL).increment((long) (residual * 10E7));
-//		context.getCounter(BlockMapReduce.GraphCounters.BLOCKS).increment(1);
-//
-//		WriteKeyValue(context, beginningNodeID, NPR, originalValues);
+		Long blockID = Long.valueOf(key.toString());
+		Long beginningNodeID = new Long(blockID == 0 ? 0 : Util.blocks[blockID.intValue() - 1] + 1);
+		Long endingNodeID = new Long(Util.blocks[blockID.intValue()]);
+		int size = endingNodeID.intValue() - beginningNodeID.intValue() + 1;
+
+		//Array of max block size to map nodes to
+		double[] beginningPR = new double[size];
+		double[] PR = new double[size];
+		double[] NPR = new double[size];
+
+		// Array of the original mapper values for this node except the pagerank
+		/*
+		 * NumOuts
+		 * List of Outs
+		 */
+		String[] originalValues = new String[size];
+		Arrays.fill(originalValues, 0, size, "");
+
+		// Array of the total incoming pagerank from outside node
+		double[] boundaryPR = new double[size];
+
+		// Array of incoming edges
+		String[] originNodes = new String[size];
+		Arrays.fill(originNodes, 0, size, "");
+
+		/**Need first iteration to set everything up from the reducer**/
+		SetUp(key, values, beginningPR, NPR, originalValues, boundaryPR, 
+				originNodes, beginningNodeID, context);
+		
+		double residual = 0;
+
+		int iteration = 0;
+		/*
+		 * Calculate the pageranks until convergence or until the residual is under a threshold
+		 */
+		do {
+			iteration += 1;
+			PR = NPR;
+			NPR = new double[size];
+			residual = IterateBlockOnce(beginningPR, PR, NPR, boundaryPR, 
+					originalValues, originNodes, beginningNodeID, context);
+
+			// TODO: Change when wanted more than 1 iteration
+		} while (iteration <= 0 && (residual / (double) NPR.length) > 0.001);
+
+		// Add the total block residual
+		context.getCounter(BlockMapReduce.GraphCounters.RESIDUAL).increment((long) (residual * 10E7));
+		context.getCounter(BlockMapReduce.GraphCounters.BLOCKS).increment(1);
+
+		WriteKeyValue(context, beginningNodeID, NPR, originalValues);
 	}
 	
 	/**
@@ -131,7 +128,8 @@ public class BlockReducer extends Reducer<Text, Text, Text, Text> {
 
 	private double IterateBlockOnce(double[] beginningPR, double[] PR, double[] NPR, 
 			double[] boundaryPR, String[] originalValues, String[] originNodes, 
-			Long beginningNodeID, org.apache.hadoop.mapreduce.Reducer<Text, Text, Text, Text>.Context context) {
+			Long beginningNodeID, org.apache.hadoop.mapreduce.Reducer<Text, Text, Text, Text>.Context context) 
+					throws IOException, InterruptedException {
 		double residual = 0;
 
 		// Iterate through all the nodes in the block
@@ -152,7 +150,7 @@ public class BlockReducer extends Reducer<Text, Text, Text, Text> {
 				double edgeFromPageRank = PR[offset];
 
 				// Get the numOuts of that source
-				long numOuts = Long.valueOf(originalValues[offset].replaceAll("  ", " ").split(" ")[0]);
+				long numOuts = Long.valueOf(originalValues[offset].split(" ")[0]);
 
 				// If this origin doesn't go out, then it all goes to me/itself
 				if (numOuts == 0) {

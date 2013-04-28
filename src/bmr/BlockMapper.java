@@ -33,9 +33,7 @@ public class BlockMapper extends Mapper<Text, Text, Text, Text> {
 		 */
 
 		// You to yourself for residual comparison
-		String s = "-1 " + key.toString() + " " + value.toString();
-		context.write(selfBlockID, 
-				new Text(s.replaceAll("  ", " ")));
+		context.write(selfBlockID, new Text("-1 " + key.toString() + " " + value.toString()));
 
 		/*
 		 * Value should be in the form:
