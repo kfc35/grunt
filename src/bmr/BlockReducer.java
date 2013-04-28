@@ -124,6 +124,25 @@ public class BlockReducer extends Reducer<Text, Text, Text, Text> {
 				boundaryPR[offset] += rank;
 			}
 		}
+		double residual = 0;
+
+		int iteration = 0;
+		/*
+		 * Calculate the pageranks until convergence or until the residual is under a threshold
+		 */
+		do {
+			iteration += 1;
+			PR = NPR;
+			NPR = new double[size];
+			residual = IterateBlockOnce(beginningPR, PR, NPR, boundaryPR, originalValues, originNodes, beginningNodeID);
+
+		} while (iteration <= 10 && residual / (double) NPR.length > 0.001);
+
+		// Add the total block residual
+		context.getCounter(BlockMapReduce.GraphCounters.RESIDUAL).increment((long) (residual * 10E7));
+		context.getCounter(BlockMapReduce.GraphCounters.NODES).increment(1);
+
+		WriteKeyValue(context, beginningNodeID, NPR, originalValues);
 	}
 
 	private double IterateBlockOnce(double[] beginningPR, double[] PR, double[] NPR, 
