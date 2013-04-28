@@ -16,7 +16,6 @@ import org.apache.hadoop.mapreduce.lib.input.KeyValueTextInputFormat;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import org.apache.hadoop.mapreduce.lib.output.TextOutputFormat;
 
-import smr.SimpleMapReduce;
 import util.Util;
 
 public class BlockMapReduce {
@@ -80,7 +79,7 @@ public class BlockMapReduce {
 				sb.append(job.getCounters().findCounter(BlockMapReduce.GraphCounters.NODES).getValue());
 				sb.append(" reduce tasks for a total residual and avg residual of | ");
 				sb.append(totalResidual).append(" : ");
-				sb.append(((double) totalResidual)/ ((double) 685230)).append("\n");
+				sb.append(totalResidual/ 685230.0).append("\n");
 //			}
 		} catch (Exception e) {
 			// Print the stack trace

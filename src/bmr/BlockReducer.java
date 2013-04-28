@@ -7,7 +7,6 @@ import java.util.StringTokenizer;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Reducer;
 
-import smr.SimpleMapReduce;
 import util.Util;
 
 public class BlockReducer extends Reducer<Text, Text, Text, Text> {
@@ -86,13 +85,15 @@ public class BlockReducer extends Reducer<Text, Text, Text, Text> {
 		/*
 		 * Calculate the pageranks until convergence or until the residual is under a threshold
 		 */
-		//do {
-		PR = NPR;
-		NPR = new double[size];
-		residual = IterateBlockOnce(beginningPR, PR, NPR, boundaryPR, originalValues, originNodes, beginningNodeID);
+		do {
+			iteration += 1;
+			PR = NPR;
+			NPR = new double[size];
+			residual = IterateBlockOnce(beginningPR, PR, NPR, boundaryPR, originalValues, originNodes, beginningNodeID);
 
-		//} while (iteration <= 10 || residual < 0.001);
+		} while (iteration <= 10 || residual / (double) NPR.length < 0.001);
 
+		// Add the total block residual
 		context.getCounter(BlockMapReduce.GraphCounters.RESIDUAL).increment((long) (residual * 10E7));
 		context.getCounter(BlockMapReduce.GraphCounters.NODES).increment(1);
 
@@ -136,7 +137,7 @@ public class BlockReducer extends Reducer<Text, Text, Text, Text> {
 			residual += Math.abs(beginningPR[i] - NPR[i]) / NPR[i];
 		}
 
-		return residual / (double) NPR.length;
+		return residual;
 	}
 
 	/**
