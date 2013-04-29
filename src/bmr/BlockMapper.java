@@ -67,7 +67,7 @@ public class BlockMapper extends Mapper<Text, Text, Text, Text> {
 			Text outRankText = new Text(Double.valueOf(pageRank / numOuts).toString());
 
 			while (itr.hasMoreTokens()) {
-				String nextKey = itr.nextToken().toString();
+				String nextKey = itr.nextToken();
 				Text toBlockID = Util.blockIDofNode(Long.valueOf(nextKey));
 
 				// Write the pagerank to the other block node
