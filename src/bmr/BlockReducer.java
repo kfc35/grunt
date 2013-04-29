@@ -21,7 +21,7 @@ public class BlockReducer extends Reducer<Text, Text, Text, Text> {
 	protected void reduce(Text key, java.lang.Iterable<Text> values, 
 			org.apache.hadoop.mapreduce.Reducer<Text, Text, Text, Text>.Context context)
 					throws IOException, InterruptedException {
-
+		
 		Long blockID = Long.valueOf(key.toString());
 		Long beginningNodeID = new Long(blockID == 0 ? 0 : Util.blocks[blockID.intValue() - 1] + 1);
 		Long endingNodeID = new Long(Util.blocks[blockID.intValue()]);
@@ -156,7 +156,7 @@ public class BlockReducer extends Reducer<Text, Text, Text, Text> {
 					numOuts = 1;
 				}
 				// Add the flow to me
-				NPR[offset] += edgeFromPageRank / ((double) numOuts);
+				NPR[i] += edgeFromPageRank / ((double) numOuts);
 			}
 
 			// Damping
