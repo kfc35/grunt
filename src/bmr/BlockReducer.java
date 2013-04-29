@@ -53,7 +53,7 @@ public class BlockReducer extends Reducer<Text, Text, Text, Text> {
 		
 		double residual = 0;
 
-		int iteration = 0;
+		int iteration = 1;
 		/*
 		 * Calculate the pageranks until convergence or until the residual is under a threshold
 		 */
@@ -161,8 +161,7 @@ public class BlockReducer extends Reducer<Text, Text, Text, Text> {
 
 			// Damping
 			NPR[i] = Util.dis + Util.damping * NPR[i];
-			residual += Math.abs(beginningPR[i] - NPR[i]) / NPR[i];
-			context.getCounter(BlockMapReduce.GraphCounters.TOTAL_PAGERANK).increment((long) (NPR[i] * 10E7));
+			residual += Math.abs(PR[i] - NPR[i]) / NPR[i];
 		}
 
 		return residual;
@@ -182,7 +181,10 @@ public class BlockReducer extends Reducer<Text, Text, Text, Text> {
 	private void WriteKeyValue(org.apache.hadoop.mapreduce.Reducer<Text, Text, Text, Text>.Context context, 
 			long beginningNodeID, double[] NPR, String[] originalValues) 
 					throws IOException, InterruptedException {
-		for (int i = 0 ; i < NPR.length ; i++) {
+		for (int i = 0 ; i < Util.size ; i++) {
+		//for (int i = 0 ; i < NPR.length ; i++) {
+
+			context.getCounter(BlockMapReduce.GraphCounters.TOTAL_PAGERANK).increment((long) (NPR[i] * 10E7));
 
 			long nodeID = i + beginningNodeID;
 			context.write(new Text("" + nodeID), new Text("" + NPR[i] + " " + originalValues[i]));
