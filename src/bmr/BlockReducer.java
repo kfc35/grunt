@@ -95,13 +95,12 @@ public class BlockReducer extends Reducer<Text, Text, Text, Text> {
 			Long nodeID = Long.valueOf(st.nextToken());
 			
 			// If it's the wrong block, add to the list and exit
-			/*
+
 			if ((block == 0 && nodeID > Util.blocks[0]) 
 					|| (block != 0 && (nodeID > Util.blocks[block] || nodeID <= Util.blocks[block] - 1))) {
 				context.getCounter(BlockMapReduce.GraphCounters.WRONG_BLOCK).increment(1);
 				continue;
 			}
-			*/
 			
 			int offset = nodeID.intValue() - beginningNodeID.intValue();
 			Double rank;
@@ -134,7 +133,7 @@ public class BlockReducer extends Reducer<Text, Text, Text, Text> {
 
 		// Iterate through all the nodes in the block
 		for (int i = 0 ; i < Util.size ; i++) {
-		//for (int i = 0 ; i < NPR.length ; i++) { TODO: Change back
+		//for (int i = 0 ; i < NPR.length ; i++) {
 
 			// Always add the boundary flow into this block
 			NPR[i] += boundaryPR[i];
