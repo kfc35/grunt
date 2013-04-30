@@ -20,7 +20,7 @@ import util.Util;
 
 public class BlockMapReduce {
 
-	static enum GraphCounters {RESIDUAL, BLOCKS, WRONG_BLOCK, TOTAL_PAGERANK}
+	static enum GraphCounters {RESIDUAL, BLOCKS, WRONG_BLOCK, TOTAL_PAGERANK, AVERAGE_ITERATION}
 	static enum PageRankValues {ZERO, ONE, TWO, THREE, FOUR, FIVE, SIX, SEVEN, 
 		EIGHT, NINE, TEN, ELEVEN, TWELVE, THIRTEEN, FOURTEEN, FIFTEEN, SIXTEEN, 
 		SEVENTEEN, EIGHTEEN, NINETEEN, TWENTY, TWENTY_ONE, TWENTY_TWO, 
@@ -32,6 +32,8 @@ public class BlockMapReduce {
 		FIFTY_ONE, FIFTY_TWO, FIFTY_THREE, FIFTY_FOUR, FIFTY_FIVE, FIFTY_SIX, 
 		FIFTY_SEVEN, FIFTY_EIGHT, FIFTY_NINE, SIXTY, SIXTY_ONE, SIXTY_TWO, 
 		SIXTY_THREE, SIXTY_FOUR, SIXTY_FIVE, SIXTY_SIX, SIXTY_SEVEN}
+	static enum AverageIterations {ONE, TWO, THREE, FOUR, FIVE, SIX, SEVEN, EIGHT, 
+		NINE, TEN, ELEVEN, TWELVE}
 
 	/**
 	 * @param args
@@ -99,7 +101,15 @@ public class BlockMapReduce {
 				avgResidual = totalResidual/ Util.size;
 				sb.append(totalResidual).append(" : ").append(avgResidual);
 				sb.append(" and total PR of ");
-				sb.append(((double) job.getCounters().findCounter(BlockMapReduce.GraphCounters.TOTAL_PAGERANK).getValue()) / 10E7).append("\n");
+				sb.append(((double) job.getCounters().findCounter(BlockMapReduce.GraphCounters.TOTAL_PAGERANK).getValue()) / 10E7);
+				sb.append("\n");
+				
+				// Adding the avg number of iterations
+				sb.append("\t Has average block passes of "); // TODO: Need to change block number
+				sb.append((double) job.getCounters().findCounter(BlockMapReduce.GraphCounters.AVERAGE_ITERATION).getValue() / ((double) Util.size / 2));
+				sb.append("\n");
+				
+				i += 1;
 			}
 
 			// Add all the final pagerank values

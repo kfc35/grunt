@@ -65,11 +65,12 @@ public class BlockReducer extends Reducer<Text, Text, Text, Text> {
 					originalValues, originNodes, beginningNodeID, context);
 
 			// TODO: Change when wanted more than 1 iteration
-		} while (iteration <= 5 && (residual / (double) NPR.length) > 0.001);
+		} while (iteration <= 5 && (residual / (double) Util.size / 2) > 0.001);
 
 		// Add the total block residual
 		context.getCounter(BlockMapReduce.GraphCounters.RESIDUAL).increment((long) (residual * 10E7));
 		context.getCounter(BlockMapReduce.GraphCounters.BLOCKS).increment(1);
+		context.getCounter(BlockMapReduce.GraphCounters.AVERAGE_ITERATION).increment(iteration  - 1);
 
 		WriteKeyValue(blockID, context, beginningNodeID, NPR, originalValues);
 	}
@@ -192,7 +193,8 @@ public class BlockReducer extends Reducer<Text, Text, Text, Text> {
 		}
 		
 		// TODO: Change later
-		int last = (int) ((Util.size / 2 - 1) + beginningNodeID);
-		context.getCounter(BlockMapReduce.PageRankValues.values()[blockID.intValue()]).setValue((long) (NPR[last] * 10E7));
+
+		double lastPageRank = NPR[(((int) Util.size) / 2) - 1];
+		context.getCounter(BlockMapReduce.PageRankValues.values()[blockID.intValue()]).setValue((long) (lastPageRank * 10E7));
 	}
 }

@@ -13,7 +13,7 @@ import javax.mail.internet.MimeMessage;
 import org.apache.hadoop.io.Text;
 
 public class Util {
-	public static long[] blocks = {1, 3};/*{10328, 20373, 30629, 40645, 50462, 60841, 
+	public static long[] blocks = {1, 3}; /*{10328, 20373, 30629, 40645, 50462, 60841, 
 		70591, 80118, 90497, 100501, 110567, 120945, 130999, 140574, 150953, 
 		161332, 171154, 181514, 191625, 202004, 212383, 222762, 232593, 242878, 
 		252938, 263149, 273210, 283473, 293255, 303043, 313370, 323522, 333883, 
@@ -22,7 +22,7 @@ public class Util {
 		524510, 534709, 545088, 555467, 565846, 576225, 586604, 596585, 606367, 
 		616148, 626448, 636240, 646022, 655804, 665666, 675448, 685229};*/
 	
-	public static final double size = 4;
+	public static final double size = 4;//685230;
 	public static final double damping = 0.85;
 	public static final double dis = (1.0 - damping) / size;
 
@@ -39,7 +39,8 @@ public class Util {
 	 * @return
 	 */
 	public static String blockIDString(long nodeID) {
-		int lower = (int) (nodeID / 2); // Get the most likely block
+		int lower = ((int) nodeID) / 10328;
+		lower = (int) (nodeID / 2); // Get the most likely block
 		return "" + lower;
 //		if (nodeID <= 10328) { // After this point, the block number needs to decrease lower than our expectation
 //			return "0";
