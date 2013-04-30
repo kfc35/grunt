@@ -48,17 +48,22 @@ public class SimpleReducer extends Reducer<Text, Text, Text, Text> {
 		pageRankValue = Util.dis + Util.damping * pageRankValue;
 		
 		// Calculate the residual, if zero new residual, then change is 100%
-		//double thisResidual = 100;
-		//if (pageRankValue != 0) {
 		double thisResidual = Math.abs((previous - pageRankValue))/pageRankValue;
-		//}
 		
 		// Increment by this long residual
 		context.getCounter(SimpleMapReduce.GraphCounters.RESIDUAL).increment((long) (thisResidual * 10E7));
 		context.getCounter(SimpleMapReduce.GraphCounters.NODES).increment(1);
 		
+		int nodeID = Integer.valueOf(key.toString());
+		Long blockID = Long.valueOf(Util.blockIDString(nodeID));
+		int last = (int) Util.blocks[blockID.intValue()];
+		if (nodeID == last) {
+			context.getCounter(SimpleMapReduce.PageRankValues.values()[blockID.intValue()]).setValue((long) (pageRankValue * 10E7));
+		}
+		
 		// Write out for next iteration
 		Text out = new Text("" + pageRankValue + " " + rest);
 		context.write(key, out);
+		
 	}
 }

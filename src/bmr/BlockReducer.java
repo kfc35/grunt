@@ -65,13 +65,13 @@ public class BlockReducer extends Reducer<Text, Text, Text, Text> {
 					originalValues, originNodes, beginningNodeID, context);
 
 			// TODO: Change when wanted more than 1 iteration
-		} while (iteration <= 0 && (residual / (double) NPR.length) > 0.001);
+		} while (iteration <= 5 && (residual / (double) NPR.length) > 0.001);
 
 		// Add the total block residual
 		context.getCounter(BlockMapReduce.GraphCounters.RESIDUAL).increment((long) (residual * 10E7));
 		context.getCounter(BlockMapReduce.GraphCounters.BLOCKS).increment(1);
 
-		WriteKeyValue(context, beginningNodeID, NPR, originalValues);
+		WriteKeyValue(blockID, context, beginningNodeID, NPR, originalValues);
 	}
 	
 	/**
@@ -161,7 +161,7 @@ public class BlockReducer extends Reducer<Text, Text, Text, Text> {
 
 			// Damping
 			NPR[i] = Util.dis + Util.damping * NPR[i];
-			residual += Math.abs(PR[i] - NPR[i]) / NPR[i];
+			residual += Math.abs(beginningPR[i] - NPR[i]) / NPR[i];
 		}
 
 		return residual;
@@ -178,7 +178,8 @@ public class BlockReducer extends Reducer<Text, Text, Text, Text> {
 	 * 
 	 * Write out each key and value pair
 	 */
-	private void WriteKeyValue(org.apache.hadoop.mapreduce.Reducer<Text, Text, Text, Text>.Context context, 
+	private void WriteKeyValue(Long blockID, 
+			org.apache.hadoop.mapreduce.Reducer<Text, Text, Text, Text>.Context context, 
 			long beginningNodeID, double[] NPR, String[] originalValues) 
 					throws IOException, InterruptedException {
 		for (int i = 0 ; i < Util.size / 2 ; i++) {
@@ -189,5 +190,9 @@ public class BlockReducer extends Reducer<Text, Text, Text, Text> {
 			long nodeID = i + beginningNodeID;
 			context.write(new Text("" + nodeID), new Text("" + NPR[i] + " " + originalValues[i]));
 		}
+		
+		// TODO: Change later
+		int last = (int) ((Util.size / 2 - 1) + beginningNodeID);
+		context.getCounter(BlockMapReduce.PageRankValues.values()[blockID.intValue()]).setValue((long) (NPR[last] * 10E7));
 	}
 }
