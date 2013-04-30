@@ -65,7 +65,7 @@ public class BlockReducer extends Reducer<Text, Text, Text, Text> {
 					originalValues, originNodes, beginningNodeID, context);
 
 			// TODO: Change when wanted more than 1 iteration
-		} while (iteration <= 5 && (residual / (double) Util.size / 2) > 0.001);
+		} while (iteration <= 10 && (residual / (double) NPR.length) >= 0.001);
 
 		// Add the total block residual
 		context.getCounter(BlockMapReduce.GraphCounters.RESIDUAL).increment((long) (residual * 10E7));
@@ -133,8 +133,7 @@ public class BlockReducer extends Reducer<Text, Text, Text, Text> {
 		double residual = 0;
 
 		// Iterate through all the nodes in the block
-		for (int i = 0 ; i < Util.size / 2 ; i++) {
-		//for (int i = 0 ; i < NPR.length ; i++) {
+		for (int i = 0 ; i < NPR.length ; i++) {
 
 			// Always add the boundary flow into this block
 			NPR[i] += boundaryPR[i];
@@ -183,8 +182,7 @@ public class BlockReducer extends Reducer<Text, Text, Text, Text> {
 			org.apache.hadoop.mapreduce.Reducer<Text, Text, Text, Text>.Context context, 
 			long beginningNodeID, double[] NPR, String[] originalValues) 
 					throws IOException, InterruptedException {
-		for (int i = 0 ; i < Util.size / 2 ; i++) {
-		//for (int i = 0 ; i < NPR.length ; i++) {
+		for (int i = 0 ; i < NPR.length ; i++) {
 
 			context.getCounter(BlockMapReduce.GraphCounters.TOTAL_PAGERANK).increment((long) (NPR[i] * 10E7));
 
@@ -194,7 +192,7 @@ public class BlockReducer extends Reducer<Text, Text, Text, Text> {
 		
 		// TODO: Change later
 
-		double lastPageRank = NPR[(((int) Util.size) / 2) - 1];
+		double lastPageRank = NPR[NPR.length - 1];
 		context.getCounter(BlockMapReduce.PageRankValues.values()[blockID.intValue()]).setValue((long) (lastPageRank * 10E7));
 	}
 }

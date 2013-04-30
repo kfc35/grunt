@@ -106,7 +106,7 @@ public class BlockMapReduce {
 				
 				// Adding the avg number of iterations
 				sb.append("\t Has average block passes of "); // TODO: Need to change block number
-				sb.append((double) job.getCounters().findCounter(BlockMapReduce.GraphCounters.AVERAGE_ITERATION).getValue() / ((double) Util.size / 2));
+				sb.append(((double) job.getCounters().findCounter(BlockMapReduce.GraphCounters.AVERAGE_ITERATION).getValue()) / ((double) Util.blocks.length));
 				sb.append("\n");
 				
 				i += 1;
