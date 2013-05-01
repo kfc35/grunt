@@ -21,7 +21,7 @@ public class BlockMapper extends Mapper<Text, Text, Text, Text> {
 	protected void map(Text key, Text value, 
 			Context context) throws IOException, InterruptedException {
 		Text selfBlockID = Util.blockIDofNode(Long.valueOf(key.toString()));
-		
+
 		/*
 		 * The first value of the value is the identification
 		 * -1 means writing input information to itself
@@ -56,12 +56,24 @@ public class BlockMapper extends Mapper<Text, Text, Text, Text> {
 		 */
 		if (numOuts == 0.0) {
 
-			/* Value in the form of 
-			 * origin = destination nodeID
-			 * pageRank left for oneself
-			 */
-			context.write(selfBlockID, 
-					new Text("0 " + key.toString() + " " + key.toString()));
+			double outRank = Double.valueOf(pageRank / Util.size);
+
+			// Give pagerank to everybody
+			for (int i = 0 ; i < Util.blocks.length ; i++) {
+				for (int j = 1 ; i <= Util.blocks[i] ; j++) {
+
+					long nodeID = (i == 0 ? j : j + Util.blocks[i - 1]);
+
+					// If in another block, give it the pagerank
+					if (i != Integer.parseInt(selfBlockID.toString())) {
+						context.write(new Text("" + i), 
+								new Text("1 " + nodeID + " " + outRank));
+					} else {
+						context.write(selfBlockID, 
+								new Text("0 " + nodeID + " " + key.toString()));
+					}
+				}
+			}
 		} else {	
 			// Compute the pagerank to all output edges
 			Text outRankText = new Text(Double.valueOf(pageRank / numOuts).toString());

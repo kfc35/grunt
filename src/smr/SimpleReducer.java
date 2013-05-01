@@ -54,6 +54,7 @@ public class SimpleReducer extends Reducer<Text, Text, Text, Text> {
 		context.getCounter(SimpleMapReduce.GraphCounters.RESIDUAL).increment((long) (thisResidual * 10E7));
 		context.getCounter(SimpleMapReduce.GraphCounters.NODES).increment(1);
 		
+		// If this is the last node in the block, set the node counter value
 		int nodeID = Integer.valueOf(key.toString());
 		Long blockID = Long.valueOf(Util.blockIDString(nodeID));
 		int last = (int) Util.blocks[blockID.intValue()];

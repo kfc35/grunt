@@ -96,7 +96,6 @@ public class BlockReducer extends Reducer<Text, Text, Text, Text> {
 			Long nodeID = Long.valueOf(st.nextToken());
 			
 			// If it's the wrong block, add to the list and exit
-			//TODO wrong if statement
 			if ((block == 0 && nodeID > Util.blocks[0]) 
 					|| (block != 0 && (nodeID > Util.blocks[block] || nodeID <= Util.blocks[block - 1]))) {
 				context.getCounter(BlockMapReduce.GraphCounters.WRONG_BLOCK).increment(1);
@@ -153,7 +152,7 @@ public class BlockReducer extends Reducer<Text, Text, Text, Text> {
 
 				// If this origin doesn't go out, then it all goes to me/itself
 				if (numOuts == 0) {
-					numOuts = 1;
+					numOuts = (long) Util.size;
 				}
 				// Add the flow to me
 				NPR[i] += edgeFromPageRank / ((double) numOuts);

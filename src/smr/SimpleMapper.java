@@ -6,6 +6,8 @@ import java.util.StringTokenizer;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Mapper;
 
+import util.Util;
+
 public class SimpleMapper extends Mapper<Text, Text, Text, Text> {
 
 	public SimpleMapper() {}
@@ -37,19 +39,24 @@ public class SimpleMapper extends Mapper<Text, Text, Text, Text> {
 		/* There's only you... so sad, so sad
 		 * pagerank
 		 * 0
+		 * Then jump to anybody else
 		 */
 		if (numOuts == 0.0) {
-			context.write(key, new Text(pageRank.toString()));
+			// Everybody gets an equal amount of this pagerank
+			Text outRankText = new Text(Double.valueOf(pageRank / Util.size).toString());
+			for (int i = 0 ; i < Util.size ; i++) {
+				context.write(new Text("" + i), outRankText);
+			}
 		} else {
 			// If your pagerank is 0, then you're useless
 			//if (pageRank != 0) {
-				
-				// Compute the pagerank to all output edges
-				Text outRankText = new Text(Double.valueOf(pageRank / numOuts).toString());
 
-				while (itr.hasMoreTokens()) {
-					context.write(new Text(itr.nextToken()), outRankText);
-				}
+			// Compute the pagerank to all output edges
+			Text outRankText = new Text(Double.valueOf(pageRank / numOuts).toString());
+
+			while (itr.hasMoreTokens()) {
+				context.write(new Text(itr.nextToken()), outRankText);
+			}
 			//}
 		}
 	}
