@@ -127,6 +127,8 @@ public class BlockMapReduce {
 			printWriter.flush();
 
 			sb.append(writer.toString());
+			
+			Util.email(sb.toString());
 		}
 
 	}

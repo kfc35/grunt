@@ -111,6 +111,8 @@ public class SimpleMapReduce {
 			printWriter.flush();
 
 			sb.append(writer.toString());
+			
+			Util.email(sb.toString());
 		}
 	}
 }

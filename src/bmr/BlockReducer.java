@@ -143,6 +143,7 @@ public class BlockReducer extends Reducer<Text, Text, Text, Text> {
 			double masterNoOutsPR) 
 					throws IOException, InterruptedException {
 		double residual = 0;
+		double forEverybody = masterNoOutsPR / Util.size;
 
 		// Iterate through all the nodes in the block
 		for (int i = 0 ; i < NPR.length ; i++) {
@@ -163,15 +164,11 @@ public class BlockReducer extends Reducer<Text, Text, Text, Text> {
 				// Get the numOuts of that source
 				long numOuts = Long.valueOf(originalValues[offset].split(" ")[0]);
 
-				// If this origin doesn't go out, then it all goes to me/itself
-				if (numOuts == 0) {
-					numOuts = (long) Util.size;
-				}
 				// Add the flow to me
 				NPR[i] += edgeFromPageRank / ((double) numOuts);
 			}
 
-			NPR[i] += masterNoOutsPR;
+			NPR[i] += forEverybody;
 			
 			// Damping
 			NPR[i] = Util.dis + Util.damping * NPR[i];
@@ -211,8 +208,7 @@ public class BlockReducer extends Reducer<Text, Text, Text, Text> {
 			context.write(new Text("" + nodeID), new Text("" + NPR[i] + " " + originalValues[i]));
 		}
 
-		// TODO: Change later
-
+		// Set the last nodeID of the block
 		double lastPageRank = NPR[NPR.length - 1];
 		context.getCounter(BlockMapReduce.PageRankValues.values()[blockID.intValue()]).setValue((long) (lastPageRank * 10E7));
 	}
