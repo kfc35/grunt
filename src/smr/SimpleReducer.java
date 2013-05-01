@@ -45,8 +45,8 @@ public class SimpleReducer extends Reducer<Text, Text, Text, Text> {
 			}
 		}
 		
-		double noOutgoingPagerank = (double) context.getCounter(SimpleMapReduce.GraphCounters.NO_OUTGOING_PAGERANK).getValue();
-		pageRankValue += noOutgoingPagerank / 10E12 / Util.size;
+		double noOutgoingPagerank = ((double) context.getCounter(SimpleMapReduce.GraphCounters.NO_OUTGOING_PAGERANK).getValue()) / 10E12;
+		pageRankValue += noOutgoingPagerank / Util.size;
 		
 		pageRankValue = Util.dis + Util.damping * pageRankValue;
 		

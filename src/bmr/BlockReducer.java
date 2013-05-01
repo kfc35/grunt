@@ -167,7 +167,7 @@ public class BlockReducer extends Reducer<Text, Text, Text, Text> {
 				NPR[i] += edgeFromPageRank / ((double) numOuts);
 			}
 
-			NPR[i] += forEverybody;
+			NPR[i] += masterNoOutsPR / Util.size;
 			
 			// Damping
 			NPR[i] = Util.dis + Util.damping * NPR[i];
