@@ -54,7 +54,7 @@ public class BlockMapReduce {
 			 * So 10, 20, 150, 300, etc */
 			while (avgResidual > 0.001 && i < Integer.parseInt(args[2])) {
 				int last = i - 1; 
-				
+
 				conf = new Configuration();
 				job = new Job(conf, "PageRank");
 
@@ -103,12 +103,13 @@ public class BlockMapReduce {
 				sb.append(" and total PR of ");
 				sb.append(((double) job.getCounters().findCounter(BlockMapReduce.GraphCounters.TOTAL_PAGERANK).getValue()) / 10E7);
 				sb.append("\n");
-				
+
 				// Adding the avg number of iterations
 				sb.append("\t Has average block passes of ");
 				sb.append(((double) job.getCounters().findCounter(BlockMapReduce.GraphCounters.AVERAGE_ITERATION).getValue()) / ((double) Util.blocks.length));
 				sb.append("\n");
-				
+
+				Util.email(sb.toString());
 				i += 1;
 			}
 
@@ -127,7 +128,6 @@ public class BlockMapReduce {
 			sb.append(writer.toString());
 		}
 
-		Util.email(sb.toString());
 	}
 
 }
