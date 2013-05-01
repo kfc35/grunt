@@ -143,7 +143,6 @@ public class BlockReducer extends Reducer<Text, Text, Text, Text> {
 			double masterNoOutsPR) 
 					throws IOException, InterruptedException {
 		double residual = 0;
-		double forEverybody = masterNoOutsPR / Util.size;
 
 		// Iterate through all the nodes in the block
 		for (int i = 0 ; i < NPR.length ; i++) {
