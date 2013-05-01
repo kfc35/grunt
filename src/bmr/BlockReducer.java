@@ -74,6 +74,7 @@ public class BlockReducer extends Reducer<Text, Text, Text, Text> {
 			masterNoOutsPR += currentBlockNoOutsPR;
 			
 			//update to 0.0 for the next iteration.
+			pastBlockNoOutsPR = currentBlockNoOutsPR;
 			currentBlockNoOutsPR = 0.0;
 
 			// TODO: Change when wanted more than 1 iteration
