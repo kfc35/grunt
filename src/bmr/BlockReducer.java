@@ -165,10 +165,6 @@ public class BlockReducer extends Reducer<Text, Text, Text, Text> {
 				// Get the numOuts of that source
 				long numOuts = Long.valueOf(originalValues[offset].split(" ")[0]);
 
-				// If this origin doesn't go out, then it all goes to me/itself
-				if (numOuts == 0) {
-					numOuts = (long) Util.size;
-				}
 				// Add the flow to me
 				NPR[i] += edgeFromPageRank / ((double) numOuts);
 			}
@@ -213,8 +209,7 @@ public class BlockReducer extends Reducer<Text, Text, Text, Text> {
 			context.write(new Text("" + nodeID), new Text("" + NPR[i] + " " + originalValues[i]));
 		}
 
-		// TODO: Change later
-
+		// Set the last nodeID of the block
 		double lastPageRank = NPR[NPR.length - 1];
 		context.getCounter(BlockMapReduce.PageRankValues.values()[blockID.intValue()]).setValue((long) (lastPageRank * 10E7));
 	}
