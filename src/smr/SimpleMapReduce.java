@@ -20,7 +20,7 @@ import util.Util;
 
 public class SimpleMapReduce {
 
-	static enum GraphCounters {RESIDUAL, NODES}
+	static enum GraphCounters {RESIDUAL, NODES, NO_OUTGOING_PAGERANK}
 	static enum PageRankValues {ZERO, ONE, TWO, THREE, FOUR, FIVE, SIX, SEVEN, 
 		EIGHT, NINE, TEN, ELEVEN, TWELVE, THIRTEEN, FOURTEEN, FIFTEEN, SIXTEEN, 
 		SEVENTEEN, EIGHTEEN, NINETEEN, TWENTY, TWENTY_ONE, TWENTY_TWO, 

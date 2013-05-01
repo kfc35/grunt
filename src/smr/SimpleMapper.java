@@ -6,8 +6,6 @@ import java.util.StringTokenizer;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Mapper;
 
-import util.Util;
-
 public class SimpleMapper extends Mapper<Text, Text, Text, Text> {
 
 	public SimpleMapper() {}
@@ -42,11 +40,7 @@ public class SimpleMapper extends Mapper<Text, Text, Text, Text> {
 		 * Then jump to anybody else
 		 */
 		if (numOuts == 0.0) {
-			// Everybody gets an equal amount of this pagerank
-			Text outRankText = new Text(Double.valueOf(pageRank / Util.size).toString());
-			for (int i = 0 ; i < Util.size ; i++) {
-				context.write(new Text("" + i), outRankText);
-			}
+			context.getCounter(SimpleMapReduce.GraphCounters.NO_OUTGOING_PAGERANK).increment((long) (pageRank * 10E12));
 		} else {
 			// If your pagerank is 0, then you're useless
 			//if (pageRank != 0) {

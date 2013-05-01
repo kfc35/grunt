@@ -45,6 +45,9 @@ public class SimpleReducer extends Reducer<Text, Text, Text, Text> {
 			}
 		}
 		
+		double noOutgoingPagerank = (double) context.getCounter(SimpleMapReduce.GraphCounters.NO_OUTGOING_PAGERANK).getValue();
+		pageRankValue += noOutgoingPagerank / 10E12;
+		
 		pageRankValue = Util.dis + Util.damping * pageRankValue;
 		
 		// Calculate the residual, if zero new residual, then change is 100%
