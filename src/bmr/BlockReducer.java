@@ -21,8 +21,26 @@ public class BlockReducer extends Reducer<Text, Text, Text, Text> {
 	protected void reduce(Text key, java.lang.Iterable<Text> values, 
 			org.apache.hadoop.mapreduce.Reducer<Text, Text, Text, Text>.Context context)
 					throws IOException, InterruptedException {
-		
 		Long blockID = Long.valueOf(key.toString());
+
+		double totalPRExceptThis = 0.0;
+		double totalPRThis = 0.0;
+		// TODO: Sweet
+		int i = 0;
+
+		for (BlockMapReduce.PageRankValues v: BlockMapReduce.PageRankValues.values()) {
+			if ((long) i == blockID) {
+				totalPRExceptThis += ((double) context.getCounter(v).getValue()) / 10E12;
+			} else {
+				totalPRThis += ((double) context.getCounter(v).getValue()) / 10E12;
+			}
+			i += 1;
+		}
+
+		context.getCounter(BlockMapReduce.GraphCounters.PRE_BLOCKS).increment(1);
+		while (context.getCounter(BlockMapReduce.GraphCounters.PRE_BLOCKS).getValue() < 68) {}
+
+		// START =============================================================
 		Long beginningNodeID = new Long(blockID == 0 ? 0 : Util.blocks[blockID.intValue() - 1] + 1);
 		Long endingNodeID = new Long(Util.blocks[blockID.intValue()]);
 		int size = endingNodeID.intValue() - beginningNodeID.intValue() + 1;
@@ -50,7 +68,7 @@ public class BlockReducer extends Reducer<Text, Text, Text, Text> {
 		/**Need first iteration to set everything up from the reducer**/
 		SetUp(key, values, beginningPR, NPR, originalValues, boundaryPR, 
 				originNodes, beginningNodeID, context);
-		
+
 		double residual = 0;
 
 		int iteration = 1;
@@ -74,7 +92,7 @@ public class BlockReducer extends Reducer<Text, Text, Text, Text> {
 
 		WriteKeyValue(blockID, context, beginningNodeID, NPR, originalValues);
 	}
-	
+
 	/**
 	 * 
 	 * Iterates through the incoming values and parses them correctly
@@ -83,9 +101,9 @@ public class BlockReducer extends Reducer<Text, Text, Text, Text> {
 			double[] NPR, String[] originalValues, double[] boundaryPR, 
 			String[] originNodes, Long beginningNodeID, 
 			org.apache.hadoop.mapreduce.Reducer<Text, Text, Text, Text>.Context context) {
-		
+
 		Integer block = Long.valueOf(key.toString()).intValue();
-		
+
 		for (Text t : values) {
 			String v = t.toString();
 
@@ -94,14 +112,14 @@ public class BlockReducer extends Reducer<Text, Text, Text, Text> {
 			int type = Integer.parseInt(st.nextToken());
 			// 1 is the toNodeID
 			Long nodeID = Long.valueOf(st.nextToken());
-			
+
 			// If it's the wrong block, add to the list and exit
 			if ((block == 0 && nodeID > Util.blocks[0]) 
 					|| (block != 0 && (nodeID > Util.blocks[block] || nodeID <= Util.blocks[block - 1]))) {
 				context.getCounter(BlockMapReduce.GraphCounters.WRONG_BLOCK).increment(1);
 				continue;
 			}
-			
+
 			int offset = nodeID.intValue() - beginningNodeID.intValue();
 			Double rank;
 
@@ -188,7 +206,7 @@ public class BlockReducer extends Reducer<Text, Text, Text, Text> {
 			long nodeID = i + beginningNodeID;
 			context.write(new Text("" + nodeID), new Text("" + NPR[i] + " " + originalValues[i]));
 		}
-		
+
 		// TODO: Change later
 
 		double lastPageRank = NPR[NPR.length - 1];

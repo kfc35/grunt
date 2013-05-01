@@ -92,6 +92,8 @@ public class SimpleMapReduce {
 				sb.append(" reduce tasks for a total residual and avg residual of | ");
 				sb.append(totalResidual).append(" : ");
 				sb.append(totalResidual/ Util.size).append("\n");
+				
+				Util.email(sb.toString());
 			}
 
 			// Add all the final pagerank values
@@ -100,7 +102,6 @@ public class SimpleMapReduce {
 				sb.append(((double)job.getCounters().findCounter(prg).getValue()) / 10E7).append("\n");
 			}
 			
-
 			Util.email(sb.toString());
 		} catch (Exception e) {
 			// Print the stack trace
@@ -111,6 +112,5 @@ public class SimpleMapReduce {
 
 			sb.append(writer.toString());
 		}
-
 	}
 }

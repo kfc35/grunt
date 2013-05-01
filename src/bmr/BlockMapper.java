@@ -21,6 +21,7 @@ public class BlockMapper extends Mapper<Text, Text, Text, Text> {
 	protected void map(Text key, Text value, 
 			Context context) throws IOException, InterruptedException {
 		Text selfBlockID = Util.blockIDofNode(Long.valueOf(key.toString()));
+		Integer selfBlockInt = Integer.valueOf(selfBlockID.toString());
 
 		/*
 		 * The first value of the value is the identification
@@ -51,26 +52,11 @@ public class BlockMapper extends Mapper<Text, Text, Text, Text> {
 
 
 		/* There's only you... so sad, so sad
-		 * pagerank
-		 * 0
+		 * Add your pagerank to the pagerankvalues enum
 		 */
 		if (numOuts == 0.0) {
 
-			double outRank = Double.valueOf(pageRank / Util.size);
-
-			// Give pagerank to everybody
-			for (long i = 0 ; i < Util.size ; i++) {
-				
-				long blockID = Long.valueOf(Util.blockIDString(i));
-				// If in another block, give it the pagerank
-				if (blockID != Long.valueOf(selfBlockID.toString())) {
-					context.write(new Text("" + blockID), 
-							new Text("1 " + i + " " + outRank));
-				} else {
-					context.write(selfBlockID, 
-							new Text("0 " + i + " " + key.toString()));
-				}
-			}
+			context.getCounter(BlockMapReduce.PageRankValues.values()[selfBlockInt]).increment((long) (pageRank * 10E12));
 		} else {	
 			// Compute the pagerank to all output edges
 			Text outRankText = new Text(Double.valueOf(pageRank / numOuts).toString());
@@ -80,7 +66,7 @@ public class BlockMapper extends Mapper<Text, Text, Text, Text> {
 				Text toBlockID = Util.blockIDofNode(Long.valueOf(nextKey));
 
 				// Write the pagerank to the other block node
-				if (Integer.parseInt(toBlockID.toString()) != Integer.parseInt((selfBlockID.toString()))) {
+				if (Integer.parseInt(toBlockID.toString()) != selfBlockInt) {
 
 					context.write(toBlockID, 
 							new Text("1 " + nextKey + " " + outRankText.toString()));
