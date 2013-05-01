@@ -74,6 +74,7 @@ public class BlockReducer extends Reducer<Text, Text, Text, Text> {
 			masterNoOutsPR += currentBlockNoOutsPR;
 			
 			//update to 0.0 for the next iteration.
+			pastBlockNoOutsPR = currentBlockNoOutsPR;
 			currentBlockNoOutsPR = 0.0;
 
 			// TODO: Change when wanted more than 1 iteration
@@ -143,6 +144,7 @@ public class BlockReducer extends Reducer<Text, Text, Text, Text> {
 			double masterNoOutsPR) 
 					throws IOException, InterruptedException {
 		double residual = 0;
+		double masterNoOutsPRNormalized = masterNoOutsPR / Util.size;
 
 		// Iterate through all the nodes in the block
 		for (int i = 0 ; i < NPR.length ; i++) {
@@ -167,7 +169,7 @@ public class BlockReducer extends Reducer<Text, Text, Text, Text> {
 				NPR[i] += edgeFromPageRank / ((double) numOuts);
 			}
 
-			NPR[i] += masterNoOutsPR / Util.size;
+			NPR[i] += masterNoOutsPRNormalized;
 			
 			// Damping
 			NPR[i] = Util.dis + Util.damping * NPR[i];
