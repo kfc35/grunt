@@ -55,7 +55,7 @@ public class BlockMapper extends Mapper<Text, Text, Text, Text> {
 		 * Add your pagerank to the pagerankvalues enum
 		 */
 		if (numOuts == 0.0) {
-
+			context.getCounter(BlockMapReduce.GraphCounters.MASTER_NO_OUTS_PR).increment((long) (pageRank * 10E12));
 			context.getCounter(BlockMapReduce.PageRankValues.values()[selfBlockInt]).increment((long) (pageRank * 10E12));
 		} else {	
 			// Compute the pagerank to all output edges
