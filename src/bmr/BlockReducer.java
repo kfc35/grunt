@@ -78,7 +78,7 @@ public class BlockReducer extends Reducer<Text, Text, Text, Text> {
 			currentBlockNoOutsPR = 0.0;
 
 			// TODO: Change when wanted more than 1 iteration
-		} while (iteration <= 1 && (residual / (double) NPR.length) >= 0.001);
+		} while (iteration <= 10 && (residual / (double) NPR.length) >= 0.001);
 
 		// Add the total block residual
 		context.getCounter(BlockMapReduce.GraphCounters.RESIDUAL).increment((long) (residual * 10E7));

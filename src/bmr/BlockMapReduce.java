@@ -119,6 +119,7 @@ public class BlockMapReduce {
 				sb.append("\t").append(prg.toString()).append(" pagerank is ");
 				sb.append(((double)job.getCounters().findCounter(prg).getValue()) / 10E7).append("\n");
 			}
+			Util.email(sb.toString());
 		} catch (Exception e) {
 			// Print the stack trace
 			StringWriter writer = new StringWriter();
