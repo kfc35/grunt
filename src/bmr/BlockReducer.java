@@ -34,8 +34,7 @@ public class BlockReducer extends Reducer<Text, Text, Text, Text> {
 		Long blockID = Long.valueOf(key.toString());
 
 		double masterNoOutsPR = ((double) context.getCounter(BlockMapReduce.GraphCounters.MASTER_NO_OUTS_PR).getValue()) / (10E12);
-		double pastBlockNoOutsPR = ((double) context.getCounter(BlockMapReduce.PageRankValues.values()[blockID.intValue()]).getValue()) / (10E12);
-		masterNoOutsPR -= pastBlockNoOutsPR;
+		double pastBlockNoOutsPR = 0;
 		
 		// START =============================================================
 		Long beginningNodeID = new Long(blockID == 0 ? 0 : Util.blocks[blockID.intValue() - 1] + 1);
@@ -63,8 +62,9 @@ public class BlockReducer extends Reducer<Text, Text, Text, Text> {
 		Arrays.fill(originNodes, 0, size, "");
 
 		/**Need first iteration to set everything up from the reducer**/
-		SetUp(key, values, beginningPR, NPR, originalValues, boundaryPR, 
+		pastBlockNoOutsPR = SetUp(key, values, beginningPR, NPR, originalValues, boundaryPR, 
 				originNodes, beginningNodeID, context);
+		masterNoOutsPR -= pastBlockNoOutsPR;
 
 		double residual = 0;
 
@@ -84,7 +84,7 @@ public class BlockReducer extends Reducer<Text, Text, Text, Text> {
 			pastBlockNoOutsPR = rv.pr;
 
 			// TODO: Change when wanted more than 1 iteration
-		} while (iteration <= 10 && (residual / (double) NPR.length) >= 0.001);
+		} while (iteration <= 1 && (residual / (double) NPR.length) >= 0.001);
 
 		// Add the total block residual
 		context.getCounter(BlockMapReduce.GraphCounters.RESIDUAL).increment((long) (residual * 10E7));
@@ -94,15 +94,17 @@ public class BlockReducer extends Reducer<Text, Text, Text, Text> {
 		WriteKeyValue(blockID, context, beginningNodeID, NPR, originalValues);
 	}
 
+	
 	/**
 	 * 
 	 * Iterates through the incoming values and parses them correctly
 	 */
-	private void SetUp(Text key, java.lang.Iterable<Text> values, double[] beginningPR, 
+	private double SetUp(Text key, java.lang.Iterable<Text> values, double[] beginningPR, 
 			double[] NPR, String[] originalValues, double[] boundaryPR, 
 			String[] originNodes, Long beginningNodeID, 
 			org.apache.hadoop.mapreduce.Reducer<Text, Text, Text, Text>.Context context) {
 
+		double noOutsPR = 0;
 		Integer block = Long.valueOf(key.toString()).intValue();
 
 		for (Text t : values) {
@@ -133,6 +135,10 @@ public class BlockReducer extends Reducer<Text, Text, Text, Text> {
 
 				// 3 is the original value to the mapper
 				originalValues[offset] = v.split(" ", 4)[3];
+				
+				if (Integer.parseInt(originalValues[offset].split(" ")[0]) == 0) {
+					noOutsPR += rank;
+				}
 			} else if (type == 0) {
 				// If this value is from another node in the block
 				originNodes[offset] += st.nextToken() + " ";
@@ -142,8 +148,11 @@ public class BlockReducer extends Reducer<Text, Text, Text, Text> {
 				boundaryPR[offset] += rank;
 			}
 		}
+		
+		return noOutsPR;
 	}
 
+	
 	private ReturnValue IterateBlockOnce(double[] beginningPR, double[] PR, double[] NPR, 
 			double[] boundaryPR, String[] originalValues, String[] originNodes, 
 			Long beginningNodeID, org.apache.hadoop.mapreduce.Reducer<Text, Text, Text, Text>.Context context,
@@ -157,7 +166,7 @@ public class BlockReducer extends Reducer<Text, Text, Text, Text> {
 		for (int i = 0 ; i < NPR.length ; i++) {
 
 			// Always add the boundary flow into this block
-			NPR[i] += boundaryPR[i];
+			NPR[i] += boundaryPR[i] + masterNoOutsPRNormalized;
 
 			StringTokenizer itr = new StringTokenizer(originNodes[i]);			
 			while (itr.hasMoreTokens()) {
@@ -175,8 +184,6 @@ public class BlockReducer extends Reducer<Text, Text, Text, Text> {
 				// Add the flow to me
 				NPR[i] += edgeFromPageRank / ((double) numOuts);
 			}
-
-			NPR[i] += masterNoOutsPRNormalized;
 			
 			// Damping
 			NPR[i] = Util.dis + Util.damping * NPR[i];
