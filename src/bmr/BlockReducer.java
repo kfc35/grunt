@@ -11,7 +11,15 @@ import util.Util;
 
 public class BlockReducer extends Reducer<Text, Text, Text, Text> {
 
-	private double currentBlockNoOutsPR = 0.0;
+	private class ReturnValue {
+		public double r = 0;
+		public double pr = 0;
+		
+		private ReturnValue(double r, double pr) {
+			this.r = r;
+			this.pr = pr;
+		}
+	}
 	
 	public BlockReducer() {}
 
@@ -27,6 +35,7 @@ public class BlockReducer extends Reducer<Text, Text, Text, Text> {
 
 		double masterNoOutsPR = ((double) context.getCounter(BlockMapReduce.GraphCounters.MASTER_NO_OUTS_PR).getValue()) / (10E12);
 		double pastBlockNoOutsPR = ((double) context.getCounter(BlockMapReduce.PageRankValues.values()[blockID.intValue()]).getValue()) / (10E12);
+		masterNoOutsPR -= pastBlockNoOutsPR;
 		
 		// START =============================================================
 		Long beginningNodeID = new Long(blockID == 0 ? 0 : Util.blocks[blockID.intValue() - 1] + 1);
@@ -67,18 +76,15 @@ public class BlockReducer extends Reducer<Text, Text, Text, Text> {
 			iteration += 1;
 			PR = NPR;
 			NPR = new double[size];
-			residual = IterateBlockOnce(beginningPR, PR, NPR, boundaryPR, 
-					originalValues, originNodes, beginningNodeID, context, masterNoOutsPR);
-			//update the "no outgoing edges" PR boundary value.
-			masterNoOutsPR -= pastBlockNoOutsPR;
-			masterNoOutsPR += currentBlockNoOutsPR;
+			ReturnValue rv = IterateBlockOnce(beginningPR, PR, NPR, boundaryPR, 
+					originalValues, originNodes, beginningNodeID, context, 
+					masterNoOutsPR, pastBlockNoOutsPR);
 			
-			//update to 0.0 for the next iteration.
-			pastBlockNoOutsPR = currentBlockNoOutsPR;
-			currentBlockNoOutsPR = 0.0;
+			residual = rv.r;
+			pastBlockNoOutsPR = rv.pr;
 
 			// TODO: Change when wanted more than 1 iteration
-		} while (iteration <= 10 && (residual / (double) NPR.length) >= 0.001);
+		} while (iteration <= 1 && (residual / (double) NPR.length) >= 0.001);
 
 		// Add the total block residual
 		context.getCounter(BlockMapReduce.GraphCounters.RESIDUAL).increment((long) (residual * 10E7));
@@ -138,13 +144,14 @@ public class BlockReducer extends Reducer<Text, Text, Text, Text> {
 		}
 	}
 
-	private double IterateBlockOnce(double[] beginningPR, double[] PR, double[] NPR, 
+	private ReturnValue IterateBlockOnce(double[] beginningPR, double[] PR, double[] NPR, 
 			double[] boundaryPR, String[] originalValues, String[] originNodes, 
 			Long beginningNodeID, org.apache.hadoop.mapreduce.Reducer<Text, Text, Text, Text>.Context context,
-			double masterNoOutsPR) 
+			double masterNoOutsPR, double thisBlockNoOutsPR) 
 					throws IOException, InterruptedException {
 		double residual = 0;
-		double masterNoOutsPRNormalized = masterNoOutsPR / Util.size;
+		double noOutsPR = 0;
+		double masterNoOutsPRNormalized = (masterNoOutsPR + thisBlockNoOutsPR) / Util.size;
 
 		// Iterate through all the nodes in the block
 		for (int i = 0 ; i < NPR.length ; i++) {
@@ -177,13 +184,13 @@ public class BlockReducer extends Reducer<Text, Text, Text, Text> {
 			// Update No Outs Boundary PR
 			long numOuts = Long.valueOf(originalValues[i].split(" ")[0]);
 			if (numOuts == 0) {
-				currentBlockNoOutsPR += NPR[i];
+				noOutsPR += NPR[i];
 			}
 			
 			residual += Math.abs(beginningPR[i] - NPR[i]) / NPR[i];
 		}
 
-		return residual;
+		return new ReturnValue(residual, noOutsPR);
 	}
 
 	/**
