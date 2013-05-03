@@ -1,0 +1,5 @@
+For the presentation, we mistakenly assumed that the numbers given in block.txt were the maximum values per block instead of the minimum values of the next block.
+
+This correction is addressed in the code.
+
+Because of the original assumption the node values for blocks were incorrect, these are now presented for the correct nodeIDs.
