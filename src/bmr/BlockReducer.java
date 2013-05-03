@@ -37,8 +37,8 @@ public class BlockReducer extends Reducer<Text, Text, Text, Text> {
 		double pastBlockNoOutsPR = 0;
 		
 		// START =============================================================
-		Long beginningNodeID = new Long(blockID == 0 ? 0 : Util.blocks[blockID.intValue() - 1] + 1);
-		Long endingNodeID = new Long(Util.blocks[blockID.intValue()]);
+		Long beginningNodeID = new Long(Util.blocks[blockID.intValue()]);
+		Long endingNodeID = new Long(blockID == 67 ? 685229 : Util.blocks[blockID.intValue() + 1] - 1);
 		int size = endingNodeID.intValue() - beginningNodeID.intValue() + 1;
 
 		//Array of max block size to map nodes to
@@ -84,7 +84,7 @@ public class BlockReducer extends Reducer<Text, Text, Text, Text> {
 			pastBlockNoOutsPR = rv.pr;
 
 			// TODO: Change when wanted more than 1 iteration
-		} while (iteration <= 10 && (residual / (double) NPR.length) >= 0.001);
+		} while (iteration <= 20 && (residual / (double) NPR.length) >= 0.001);
 
 		// Add the total block residual
 		context.getCounter(BlockMapReduce.GraphCounters.RESIDUAL).increment((long) (residual * 10E7));
@@ -117,8 +117,8 @@ public class BlockReducer extends Reducer<Text, Text, Text, Text> {
 			Long nodeID = Long.valueOf(st.nextToken());
 
 			// If it's the wrong block, add to the list and exit
-			if ((block == 0 && nodeID > Util.blocks[0]) 
-					|| (block != 0 && (nodeID > Util.blocks[block] || nodeID <= Util.blocks[block - 1]))) {
+			if ((block == 67 && nodeID < Util.blocks[67]) 
+					|| (block != 67 && (nodeID >= Util.blocks[block + 1] || nodeID < Util.blocks[block]))) {
 				context.getCounter(BlockMapReduce.GraphCounters.WRONG_BLOCK).increment(1);
 				continue;
 			}
